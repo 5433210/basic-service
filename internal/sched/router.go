@@ -17,9 +17,13 @@ func route(app *fiber.App, srvc servicev1.Service) {
 }
 
 func schedGroup(v1 fiber.Router, c controllerv1.Controller) {
-	v1Sched := v1.Group("sched")
+	v1Sched := v1.Group("jobs")
 	{
-		v1Sched.Post("", c.Sched().VerifySched)
-		v1Sched.Get("", c.Sched().GenerateSched)
+		v1Sched.Get("", c.Sched().GetAllJobs)
+		v1Sched.Post("", c.Sched().CreateJob)
+		v1Sched.Get(":job_id", c.Sched().GetJobById)
+		v1Sched.Patch(":job_id", c.Sched().UpdateJob)
+		v1Sched.Delete(":job_id", c.Sched().DeleteJob)
+		v1Sched.Get(":job_id/executions", c.Sched().GetJobAllExecutions)
 	}
 }

@@ -92,4 +92,6 @@ const (
 	EmailOtpTemplatePattern = "{\"code\":\"%s\"}"
 	EmailAddrNoReply        = "noreply@taijik.com"
 	EmailOtpSubject         = "动态验证码"
+
+	FldJobId = "job_id"
 )

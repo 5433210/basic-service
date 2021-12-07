@@ -1,0 +1,233 @@
+openapi: 3.0.0
+info:
+  title: sched
+  version: "1.0"
+  contact: {}
+  description: job scheduler API
+servers:
+  - url: "http://localhost:3000"
+paths:
+  /jobs:
+    get:
+      summary: ""
+      tags: []
+      operationId: getAllJobs
+      description: retrieve all jobs
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Job"
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+    post:
+      tags: []
+      summary: ""
+      operationId: createJob
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+      description: create a job
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Job"
+  "/jobs/{jobId}":
+    parameters:
+      - schema:
+          type: string
+        name: jobId
+        in: path
+        required: true
+    get:
+      summary: ""
+      tags: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/Job"
+      operationId: getJobById
+      description: get a job by id
+    patch:
+      tags: []
+      summary: ""
+      operationId: updateJob
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+      description: update a job
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Job"
+    delete:
+      tags: []
+      summary: ""
+      operationId: deleteJob
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+      description: delete a job
+  "/jobs/{jobId}/executions":
+    parameters:
+      - schema:
+          type: string
+        name: jobId
+        in: path
+        required: true
+    get:
+      summary: ""
+      tags: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Execution"
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+      operationId: getJobAllExecutions
+      description: get a job's executions
+components:
+  schemas:
+    OkResponse:
+      title: OkResponse
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    ErrorResponse:
+      title: ErrorResponse
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+      required:
+        - code
+        - message
+    Job:
+      title: Job
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        owner:
+          type: string
+        schedule:
+          type: string
+        timezone:
+          type: string
+        disabled:
+          type: boolean
+        next:
+          type: string
+          format: date-time
+          readOnly: true
+        executor:
+          $ref: "#/components/schemas/Executor"
+        data:
+          type: object
+      required:
+        - id
+        - timezone
+        - disabled
+        - next
+        - executor
+    Execution:
+      title: Execution
+      type: object
+      properties:
+        id:
+          type: string
+        job_id:
+          type: string
+        return_code:
+          type: string
+        output:
+          type: string
+        started_at:
+          type: string
+        finished_at:
+          type: string
+    Executor:
+      title: Executor
+      type: object
+      properties:
+        name:
+          type: string
+        config:
+          type: object
+      required:
+        - name
+        - config
+  responses:
+    Ok:
+      description: Ok response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/OkResponse"
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  parameters: {}

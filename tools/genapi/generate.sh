@@ -4,7 +4,7 @@ base_dir=./
 module=api
 version=v1
 package=$module$version
-spec="/Users/zhangweili/Desktop/rbac/api/openapi/captcha.yaml"
+spec="/Users/zhangweili/Desktop/basic-service/api/openapi/sched.yaml"
 
 # go get github.com/deepmap/oapi-codegen/cmd/oapi-codegen
 # oapi-codegen petstore-expanded.yaml  > petstore.gen.go
