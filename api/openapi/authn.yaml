@@ -1,0 +1,817 @@
+openapi: 3.0.0
+info:
+  title: authn
+  version: '1.0'
+  contact: {}
+  description: Authentication API
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /identities:
+    post:
+      tags: []
+      summary: ''
+      operationId: createIdentity
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    required:
+                      - identity
+                    type: object
+                    properties:
+                      identity:
+                        $ref: '#/components/schemas/Identity'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: create a identity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Identity'
+        description: identity with no id
+  '/identities/{identity_id}':
+    parameters:
+      - $ref: '#/components/parameters/identity_id'
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      identity:
+                        $ref: '#/components/schemas/Identity'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: getIdentity
+      description: Get a specified identity
+    delete:
+      tags: []
+      summary: ''
+      operationId: deleteIdentity
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: delete an identity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  $ref: '#/components/schemas/AuthenticatedToken'
+              required:
+                - token
+  '/identities/{identity_id}/state':
+    parameters:
+      - $ref: '#/components/parameters/identity_id'
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      state:
+                        $ref: '#/components/schemas/State'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: getIdentityState
+      description: get identity state
+    put:
+      tags: []
+      summary: ''
+      operationId: updateIdentityState
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: set identity state
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  $ref: '#/components/schemas/AuthenticatedToken'
+                state:
+                  $ref: '#/components/schemas/State'
+              required:
+                - token
+                - state
+  '/identities/{identity_id}/identifiers':
+    parameters:
+      - $ref: '#/components/parameters/identity_id'
+    get:
+      summary: ''
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                      - identifiers
+                    properties:
+                      identifiers:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/IdentifierCredentials'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: getAllIdentifiersOfIdentity
+      description: get all identifiers binded to an identity
+      parameters: []
+    put:
+      tags: []
+      summary: ''
+      operationId: createIdentityIdentifer
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: bind an identifier to an identity
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  $ref: '#/components/schemas/AuthenticatedToken'
+                identifier_credentials:
+                  $ref: '#/components/schemas/IdentifierCredentials'
+              required:
+                - token
+                - identifier_credentials
+        description: |
+          elements in identifer_credentials: 
+          identifier: domain_id, identifier, identifier_type, verified_token are required.
+          credentials: type is required, config is optional. if this type of credetial hasn't existed, it will be created in identity. if type existed, then ignore config
+  '/identities/{identity_id}/credentials':
+    parameters:
+      - $ref: '#/components/parameters/identity_id'
+    get:
+      tags: []
+      summary: ''
+      operationId: getAllCredentialsOfIdentity
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      credentials:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CredentialIdentifiers'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: 'retrieve credentials of the identity '
+  '/identities/{identity_id}/credentials/{credential_type}':
+    parameters:
+      - $ref: '#/components/parameters/identity_id'
+      - $ref: '#/components/parameters/credential_type'
+    delete:
+      tags: []
+      summary: ''
+      operationId: deleteCredentialOfIdentity
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: delete a credential of a identity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  $ref: '#/components/schemas/AuthenticatedToken'
+              required:
+                - token
+    patch:
+      tags: []
+      summary: ''
+      operationId: updateCredentialOfIdentity
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: update a identity credential config
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                config:
+                  $ref: '#/components/schemas/CredentialConfig'
+                token:
+                  $ref: '#/components/schemas/AuthenticatedToken'
+              required:
+                - config
+                - token
+  '/identities/{identity_id}/credentials/{credential_type}/identifiers':
+    parameters:
+      - $ref: '#/components/parameters/identity_id'
+      - $ref: '#/components/parameters/credential_type'
+    put:
+      tags: []
+      summary: ''
+      operationId: bindIdentifierToCredentialOfIdentity
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: bind an existed identifier to a credential type
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domain_id:
+                  $ref: '#/components/schemas/DomainId'
+                identifier:
+                  $ref: '#/components/schemas/Identifier'
+                token:
+                  $ref: '#/components/schemas/AuthenticatedToken'
+                identifier_type:
+                  $ref: '#/components/schemas/IdentifierType'
+              required:
+                - domain_id
+                - identifier
+                - token
+                - identifier_type
+        description: ''
+    delete:
+      tags: []
+      summary: ''
+      operationId: unbindIdentifierToCredentialOfIdentity
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: unbind a identifier to a credential
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domain_id:
+                  $ref: '#/components/schemas/DomainId'
+                identifier:
+                  $ref: '#/components/schemas/Identifier'
+                token:
+                  $ref: '#/components/schemas/AuthenticatedToken'
+                identifier_type:
+                  $ref: '#/components/schemas/IdentifierType'
+              required:
+                - domain_id
+                - identifier
+                - token
+                - identifier_type
+        description: ''
+  /identifiers/authentication:
+    put:
+      tags: []
+      summary: ''
+      operationId: generateCredentialForAuthentication
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: 'generate a new credential for an identifier, only use by onetime_password types of credentials'
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                identifier:
+                  $ref: '#/components/schemas/Identifier'
+                domain_id:
+                  $ref: '#/components/schemas/DomainId'
+                identifier_type:
+                  $ref: '#/components/schemas/IdentifierType'
+                credential_type:
+                  $ref: '#/components/schemas/CredentialType'
+              required:
+                - identifier
+                - domain_id
+                - identifier_type
+                - credential_type
+        description: ''
+    post:
+      tags: []
+      summary: ''
+      operationId: checkCredentialForAuthentication
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                      - token
+                    properties:
+                      token:
+                        $ref: '#/components/schemas/AuthenticatedToken'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: 'check credential, return a token while passed the check'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domain_id:
+                  $ref: '#/components/schemas/DomainId'
+                identifier:
+                  $ref: '#/components/schemas/Identifier'
+                credential_config:
+                  $ref: '#/components/schemas/CredentialConfig'
+                identifier_type:
+                  $ref: '#/components/schemas/IdentifierType'
+                credential_type:
+                  $ref: '#/components/schemas/CredentialType'
+              required:
+                - domain_id
+                - identifier
+                - credential_config
+                - identifier_type
+                - credential_type
+        description: |-
+          domain_id, identifier, config are required.
+            
+    parameters: []
+  '/identifiers/{identifier_id}':
+    parameters:
+      - name: identifier_id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: id of identifier
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                      - identifier
+                    properties:
+                      identifier:
+                        $ref: '#/components/schemas/IdentifierCredentials'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: getIdentifier
+      description: get an identifier
+      parameters: []
+    delete:
+      tags: []
+      summary: ''
+      operationId: deleteIdentifier
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: delete identifier
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  $ref: '#/components/schemas/AuthenticatedToken'
+              required:
+                - token
+        description: ''
+    patch:
+      tags: []
+      summary: ''
+      operationId: changeIdentifier
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: 'change identifier. for example, mobile phone change, new number replace old'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idetifier:
+                  $ref: '#/components/schemas/Identifier'
+                token:
+                  $ref: '#/components/schemas/AuthenticatedToken'
+                identifier_verify_token:
+                  $ref: '#/components/schemas/IdentifierVerifyToken'
+              required:
+                - idetifier
+                - token
+        description: ''
+  /identifiers/id:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                      - identifier_id
+                    properties:
+                      identifier_id:
+                        $ref: '#/components/schemas/IdentifierId'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: getIdentifierId
+      description: get identifier's id
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domain_id:
+                  $ref: '#/components/schemas/DomainId'
+                identifier:
+                  $ref: '#/components/schemas/Identifier'
+                identifier_type:
+                  $ref: '#/components/schemas/IdentifierType'
+              required:
+                - domain_id
+                - identifier
+                - identifier_type
+            examples: {}
+    parameters: []
+  /identifiers/verification:
+    put:
+      tags: []
+      summary: ''
+      operationId: requestIdentifierVerifyToken
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: 'request a verify token for an identifier, commonly used in onetime password mode'
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domain_id:
+                  $ref: '#/components/schemas/DomainId'
+                identifier:
+                  $ref: '#/components/schemas/Identifier'
+                identifier_type:
+                  $ref: '#/components/schemas/IdentifierType'
+              required:
+                - domain_id
+                - identifier
+                - identifier_type
+    parameters: []
+components:
+  schemas:
+    Identity:
+      title: Identity
+      type: object
+      description: ''
+      properties:
+        id:
+          $ref: '#/components/schemas/IdentityId'
+        credentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/CredentialIdentifiers'
+        state:
+          $ref: '#/components/schemas/State'
+        domain_id:
+          $ref: '#/components/schemas/DomainId'
+    IdentifierObject:
+      title: IdentifierObject
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/IdentifierId'
+        domain_id:
+          $ref: '#/components/schemas/DomainId'
+        identifier:
+          $ref: '#/components/schemas/Identifier'
+        identity_id:
+          $ref: '#/components/schemas/IdentityId'
+        identifier_type:
+          $ref: '#/components/schemas/IdentifierType'
+        identifier_verifiy_token:
+          $ref: '#/components/schemas/IdentifierVerifyToken'
+      required:
+        - domain_id
+        - identifier
+        - identifier_type
+    CredentialObject:
+      title: CredentialObject
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/CredentialType'
+        config:
+          $ref: '#/components/schemas/CredentialConfig'
+        identity_id:
+          $ref: '#/components/schemas/IdentityId'
+      required:
+        - type
+    CredentialType:
+      title: CredentialType
+      type: string
+    CredentialIdentifiers:
+      title: CredentialIdentifiers
+      type: object
+      description: ''
+      properties:
+        credential:
+          $ref: '#/components/schemas/CredentialObject'
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentifierObject'
+      required:
+        - credential
+        - identifiers
+    CredentialConfig:
+      title: CredentialConfig
+      type: object
+    State:
+      title: State
+      type: string
+    IdentifierVerifyToken:
+      title: IdentifierVerifyToken
+      type: string
+      description: token use in identifer's verification
+    ErrorResponse:
+      title: ErrorResponse
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+      required:
+        - code
+        - message
+    IdentifierCredentials:
+      title: IdentifierCredentials
+      type: object
+      properties:
+        identifier:
+          $ref: '#/components/schemas/IdentifierObject'
+        credentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/CredentialObject'
+    IdentityId:
+      title: IdentityId
+      type: string
+    DomainId:
+      title: DomainId
+      type: string
+    IdentifierId:
+      title: IdentifierId
+      type: string
+    Identifier:
+      title: Identifier
+      type: string
+    OkResponse:
+      title: OkResponse
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    IdentifierType:
+      title: IdentifierType
+      type: string
+      description: 'accno:account number, idcard:id card, mobile:mobile phone, email:email address'
+    AuthenticatedToken:
+      title: AuthenticatedToken
+      type: string
+      description: token generated after credential check
+    CredentialId:
+      title: CredentialId
+      type: string
+  responses:
+    Ok:
+      description: Ok response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  parameters:
+    identity_id:
+      name: identity_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: id of identity
+    credential_type:
+      name: credential_type
+      in: path
+      required: true
+      schema:
+        type: string
+      description: type of  credential
+    identifier_id:
+      name: identifier_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: id of identifier

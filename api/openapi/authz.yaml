@@ -1,0 +1,1655 @@
+openapi: 3.0.0
+info:
+  title: authz
+  version: '1.0'
+  description: Authz API
+  contact: {}
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /domains:
+    get:
+      tags: []
+      operationId: get-domains
+      description: Retrieve all domains
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Domain'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      summary: ''
+    post:
+      tags: []
+      operationId: post-domains
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Create a new domain
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Domain'
+        description: domain object
+  '/domains/{domainId}':
+    parameters:
+      - schema:
+          type: string
+        name: domainId
+        in: path
+        required: true
+    get:
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Domain'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-domain-domainId
+      description: Retrieve a domain
+    delete:
+      tags: []
+      operationId: delete-domain-domainId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Delete a domain
+    patch:
+      tags: []
+      operationId: patch-domain-domainId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Modify a domain
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Domain'
+        description: domain object
+  /permissions:
+    parameters: []
+    get:
+      tags: []
+      operationId: get-permissions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Permission"
+                required:
+                  - code
+                  - message
+                  - data
+              examples: {}
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Retrieve all permissions
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+    post:
+      tags: []
+      operationId: post-permissions
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Create a new permission
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Permission'
+            examples: {}
+        description: permission object
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+  '/permissions/{permissionId}':
+    parameters:
+      - schema:
+          type: string
+        name: permissionId
+        in: path
+        required: true
+    get:
+      tags: []
+      operationId: get-permissions-permissionId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Permission'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: retrieve a permission
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+    patch:
+      tags: []
+      operationId: patch-permissions-permissionId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Modify a permission
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: permission object
+    delete:
+      tags: []
+      operationId: delete-permissions-permissionId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Delete a permission
+  /roles:
+    parameters: []
+    get:
+      tags: []
+      operationId: get-roles
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Role"
+                required:
+                  - code
+                  - message
+                  - data
+              examples: {}
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Retrieve all roles
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+    post:
+      tags: []
+      operationId: post-roles
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Create a new Role
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Role'
+            examples: {}
+        description: Role object
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+  '/roles/{roleId}':
+    parameters:
+      - schema:
+          type: string
+        name: roleId
+        in: path
+        required: true
+    get:
+      tags: []
+      operationId: get-roles-roleId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Role'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: retrieve a Role
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+    patch:
+      tags: []
+      operationId: patch-roles-roleId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Modify a Role
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: Role object
+    delete:
+      tags: []
+      operationId: delete-roles-roleId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Delete a Role
+  /denies:
+    parameters: []
+    get:
+      tags: []
+      operationId: get-denies
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Deny"
+                required:
+                  - code
+                  - message
+                  - data
+              examples: {}
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Retrieve all denies
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+    post:
+      tags: []
+      operationId: post-denies
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Create a new Deny
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Deny'
+            examples: {}
+        description: Deny object
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+  '/denies/{denyId}':
+    parameters:
+      - schema:
+          type: string
+        name: denyId
+        in: path
+        required: true
+    get:
+      tags: []
+      operationId: get-denies-denyId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Deny'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: retrieve a Deny
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+    patch:
+      tags: []
+      operationId: patch-denies-denyId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Modify a Deny
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: Deny object
+    delete:
+      tags: []
+      operationId: delete-denies-denyId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Delete a Deny
+  /groups:
+    parameters: []
+    get:
+      tags: []
+      operationId: get-groups
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Group"
+                required:
+                  - code
+                  - message
+                  - data
+              examples: {}
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Retrieve all groups
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+    post:
+      tags: []
+      operationId: post-groups
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Create a new Group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+            examples: {}
+        description: Group object
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+  '/groups/{groupId}':
+    parameters:
+      - schema:
+          type: string
+        name: groupId
+        in: path
+        required: true
+    get:
+      tags: []
+      operationId: get-groups-groupId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Group'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: retrieve a Group
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+    patch:
+      tags: []
+      operationId: patch-groups-groupId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Modify a Group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: Group object
+    delete:
+      tags: []
+      operationId: delete-groups-groupId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Delete a Group
+  '/groups/{groupId}/permissions':
+    parameters:
+      - schema:
+          type: string
+        name: groupId
+        in: path
+        required: true
+    get:
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PermissionOptons'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-groups-groupId-permissions
+      description: 'Get a group''s permissions  '
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+  '/groups/{groupId}/roles':
+    parameters:
+      - schema:
+          type: string
+        name: groupId
+        in: path
+        required: true
+    get:
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoleOptions'
+                  code:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - data
+                  - code
+                  - message
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-groups-groupId-roles
+      description: Get a group's roles
+    put:
+      tags: []
+      operationId: put-groups-groupId-roles
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Add a role to  a group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleOptions'
+        description: role options object
+  '/groups/{groupId}/roles/{roleId}':
+    parameters:
+      - schema:
+          type: string
+        name: domainId
+        in: query
+        required: false
+      - schema:
+          type: string
+        name: groupId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: roleId
+        in: path
+        required: true
+    delete:
+      tags: []
+      operationId: delete-groups-groupId-roles-roleId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Delete a group's role
+  '/groups/{groupId}/denies':
+    parameters:
+      - schema:
+          type: string
+        name: groupId
+        in: path
+        required: true
+    get:
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DenyOptions'
+                  code:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - data
+                  - code
+                  - message
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-groups-groupId-denies
+      description: Get a group's denies
+    put:
+      tags: []
+      operationId: put-groups-groupId-denies
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Add a deny to  a group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DenyOptions'
+        description: deny options object
+  '/groups/{groupId}/denies/{denyId}':
+    parameters:
+      - schema:
+          type: string
+        name: domainId
+        in: query
+        required: false
+      - schema:
+          type: string
+        name: groupId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: denyId
+        in: path
+        required: true
+    delete:
+      tags: []
+      operationId: delete-groups-groupId-denies-denyId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Delete a group's deny
+  '/groups/{groupId}/members':
+    parameters:
+      - schema:
+          type: string
+        name: groupId
+        in: path
+        required: true
+    get:
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SubjectOptions'
+                  code:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - data
+                  - code
+                  - message
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-groups-groupId-members
+      description: Get a group's members
+    put:
+      tags: []
+      operationId: put-groups-groupId-members
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Add a member to  a group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectOptions'
+        description: member options object
+  '/groups/{groupId}/members/{memberId}':
+    parameters:
+      - schema:
+          type: string
+        name: domainId
+        in: query
+        required: false
+      - schema:
+          type: string
+        name: groupId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: memberId
+        in: path
+        required: true
+    delete:
+      tags: []
+      operationId: delete-groups-groupId-members-memberId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Delete a group's member
+  /subjects:
+    parameters: []
+    get:
+      tags: []
+      operationId: get-subjects
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Subject"
+                required:
+                  - code
+                  - message
+                  - data
+              examples: {}
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Retrieve all subjects
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+    post:
+      tags: []
+      operationId: post-subjects
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Create a new Subject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Subject'
+            examples: {}
+        description: Subject object
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+  '/subjects/{subjectId}':
+    parameters:
+      - schema:
+          type: string
+        name: subjectId
+        in: path
+        required: true
+    get:
+      tags: []
+      operationId: get-subjects-subjectId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Subject'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: retrieve a Subject
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+    patch:
+      tags: []
+      operationId: patch-subjects-subjectId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Modify a Subject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: Subject object
+    delete:
+      tags: []
+      operationId: delete-subjects-subjectId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Delete a Subject
+  '/subjects/{subjectId}/permissions':
+    parameters:
+      - schema:
+          type: string
+        name: subjectId
+        in: path
+        required: true
+    get:
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PermissionOptons'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-subjects-subjectId-permissions
+      description: 'Get a Subject''s permissions  '
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+  '/subjects/{subjectId}/roles':
+    parameters:
+      - schema:
+          type: string
+        name: subjectId
+        in: path
+        required: true
+    get:
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoleOptions'
+                  code:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - data
+                  - code
+                  - message
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-subjects-subjectId-roles
+      description: Get a Subject's roles
+    put:
+      tags: []
+      operationId: put-subjects-subjectId-roles
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Add a role to  a Subject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleOptions'
+        description: role options object
+  '/subjects/{subjectId}/roles/{roleId}':
+    parameters:
+      - schema:
+          type: string
+        name: domainId
+        in: query
+        required: false
+      - schema:
+          type: string
+        name: subjectId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: roleId
+        in: path
+        required: true
+    delete:
+      tags: []
+      operationId: delete-subjects-subjectId-roles-roleId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Delete a Subject's role
+  '/subjects/{subjectId}/denies':
+    parameters:
+      - schema:
+          type: string
+        name: subjectId
+        in: path
+        required: true
+    get:
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DenyOptions'
+                  code:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - data
+                  - code
+                  - message
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-subjects-subjectId-denies
+      description: Get a Subject's denies
+    put:
+      tags: []
+      operationId: put-subjects-subjectId-denies
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Add a deny to  a Subject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DenyOptions'
+        description: deny options object
+  '/subjects/{subjectId}/denies/{denyId}':
+    parameters:
+      - schema:
+          type: string
+        name: domainId
+        in: query
+        required: false
+      - schema:
+          type: string
+        name: subjectId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: denyId
+        in: path
+        required: true
+    delete:
+      tags: []
+      operationId: delete-subjects-subjectId-denies-denyId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Delete a Subject's deny
+  '/subjects/{subjectId}/groups':
+    parameters:
+      - schema:
+          type: string
+        name: subjectId
+        in: path
+        required: true
+    get:
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GroupOtions'
+                  code:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - data
+                  - code
+                  - message
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-subjects-subjectId-groups
+      description: Get a Subject's groups
+    put:
+      tags: []
+      operationId: put-subjects-subjectId-groups
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Add a group to  a Subject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupOtions'
+        description: group options object
+  '/subjects/{subjectId}/groups/{groupId}':
+    parameters:
+      - schema:
+          type: string
+        name: domainId
+        in: query
+        required: false
+      - schema:
+          type: string
+        name: subjectId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: groupId
+        in: path
+        required: true
+    delete:
+      tags: []
+      operationId: delete-subjects-subjectId-groups-groupId
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: Delete a Subject's group
+  '/subjects/{subjectId}/roles/can_be_granted':
+    parameters:
+      - schema:
+          type: string
+        name: subjectId
+        in: path
+        required: true
+    get:
+      summary: ''
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoleOptions'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-subjects-subjectId-roles-can_be_granted
+      description: Retrieve roles can be granted to a subject
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+  '/subjects/{subjectId}/roles/can_be_accessed':
+    parameters:
+      - schema:
+          type: string
+        name: subjectId
+        in: path
+        required: true
+    get:
+      summary: ''
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoleOptions'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-subjects-subjectId-roles-can_be_accessed
+      description: Retrieve roles can be accessed by a subject
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+  '/subjects/{subjectId}/denies/can_be_granted':
+    parameters:
+      - schema:
+          type: string
+        name: subjectId
+        in: path
+        required: true
+    get:
+      summary: ''
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DenyOptions'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-subjects-subjectId-denies-can_be_granted
+      description: Retrieve denies can be granted to a subject
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+  '/subjects/{subjectId}/denies/can_be_accessed':
+    parameters:
+      - schema:
+          type: string
+        name: subjectId
+        in: path
+        required: true
+    get:
+      summary: ''
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DenyOptions'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      operationId: get-subjects-subjectId-denies-can_be_accessed
+      description: Retrieve denies can be accessed by a subject
+      parameters:
+        - $ref: '#/components/parameters/domainId'
+components:
+  schemas:
+    Domain:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          id: id
+          name: name
+      title: Domain
+      properties:
+        id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        options:
+          type: object
+      required:
+        - id
+    Permission:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          id: id
+          options: {}
+      properties:
+        id:
+          type: string
+          minLength: 1
+        options:
+          type: object
+      required:
+        - id
+    Role:
+      description: Simple definition of a role
+      type: object
+      x-examples:
+        example-1:
+          id: id
+          options: {}
+      properties:
+        id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+        dynamically_isolated:
+          type: boolean
+        exclusive_roles:
+          type: array
+          items:
+            type: string
+        permissions:
+          $ref: '#/components/schemas/PermissionsInRole'
+        scopes:
+          $ref: '#/components/schemas/ScopesInRole'
+      required:
+        - id
+    Deny:
+      description: Simple definition of a deny
+      type: object
+      x-examples:
+        example-1:
+          id: id
+          options: {}
+      properties:
+        id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+        permissions:
+          $ref: '#/components/schemas/PermissionInDeny'
+        scopes:
+          $ref: '#/components/schemas/ScopesInDeny'
+      required:
+        - id
+    Group:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          id: id
+          options: {}
+      properties:
+        id:
+          type: string
+          minLength: 1
+        options:
+          type: object
+      required:
+        - id
+    Subject:
+      description: ''
+      x-examples:
+        example-1:
+          id: id
+          properties: {}
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        options:
+          type: object
+      required:
+        - id
+    PermissionInDeny:
+      title: PermissionsInDeny
+      type: object
+      properties:
+        included:
+          type: array
+          items:
+            type: string
+        excluded:
+          type: array
+          items:
+            type: string
+      x-examples: {}
+    ScopesInDeny:
+      title: ScopesInDeny
+      type: object
+      properties:
+        can_be_granted:
+          type: array
+          items:
+            type: string
+        can_be_accessed:
+          type: array
+          items:
+            type: string
+    DenyOptions:
+      title: DenyOptions
+      type: object
+      properties:
+        id:
+          type: string
+        options:
+          type: object
+      required:
+        - id
+    RoleOptions:
+      title: RoleOptions
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+    PermissionsInRole:
+      title: PermissionsInRole
+      type: object
+      properties:
+        included:
+          type: object
+        excluded:
+          type: array
+          items:
+            type: string
+    ScopesInRole:
+      title: ScopesInRole
+      type: object
+      properties:
+        can_be_granted:
+          type: array
+          items:
+            type: string
+        can_be_accessed:
+          type: array
+          items:
+            type: string
+    GroupOtions:
+      title: GroupOtions
+      type: object
+      properties:
+        id:
+          type: string
+        options:
+          type: object
+      required:
+        - id
+    PermissionOptons:
+      title: PermissionOptons
+      type: object
+      properties:
+        id:
+          type: string
+        options:
+          type: object
+      required:
+        - id
+    SubjectOptions:
+      title: SubjectOptions
+      type: object
+      properties:
+        id:
+          type: string
+        options:
+          type: object
+      required:
+        - id
+    Response:
+      title: Response
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+      required:
+        - code
+        - message
+  securitySchemes: {}
+  responses:
+    Error:
+      description: error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Response'
+      headers: {}
+    Ok:
+      description: ok response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+            required:
+              - code
+  examples: {}
+  parameters:
+    domainId:
+      name: domainId
+      in: query
+      required: false
+      schema:
+        type: string
+      description: domain id

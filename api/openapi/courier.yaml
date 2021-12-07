@@ -1,0 +1,279 @@
+openapi: 3.0.0
+info:
+  title: courier
+  version: '1.0'
+  contact: {}
+  description: Courier API
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /email:
+    post:
+      tags: []
+      summary: ''
+      operationId: sendEmail
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                      - status
+                    properties:
+                      status:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SendStatus'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: send email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Email'
+    parameters: []
+  /sms:
+    post:
+      tags: []
+      summary: ''
+      operationId: sendSms
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                      - status
+                    properties:
+                      status:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SendStatus'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: send sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Sms'
+    parameters: []
+components:
+  schemas:
+    OkResponse:
+      title: OkResponse
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    ErrorResponse:
+      title: ErrorResponse
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+      required:
+        - code
+        - message
+    EmailAddress:
+      title: EmailAddress
+      type: string
+    Email:
+      title: Email
+      type: object
+      properties:
+        from:
+          $ref: '#/components/schemas/EmailAddress'
+        to:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailAddress'
+        subject:
+          type: string
+        reply_to:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailAddress'
+        content:
+          $ref: '#/components/schemas/EmailContent'
+      required:
+        - from
+        - to
+        - subject
+        - content
+    EmailTemplate:
+      title: EmailTemplate
+      type: object
+      properties:
+        id:
+          type: string
+        data:
+          type: string
+      required:
+        - id
+        - data
+    EmailContent:
+      x-internal: false
+      type: object
+      properties:
+        mode:
+          $ref: '#/components/schemas/EmailContentMode'
+        payload:
+          oneOf:
+            - $ref: '#/components/schemas/EmailTemplate'
+            - $ref: '#/components/schemas/Text'
+            - $ref: '#/components/schemas/Html'
+      required:
+        - mode
+        - payload
+    Text:
+      title: Text
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+        - text
+    Html:
+      title: Html
+      type: object
+      properties:
+        html:
+          type: string
+      required:
+        - html
+    EmailContentMode:
+      title: EmailContentMode
+      type: string
+    Sms:
+      title: Sms
+      type: object
+      properties:
+        from:
+          $ref: '#/components/schemas/PhoneNumberObject'
+        to:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhoneNumberObject'
+        content:
+          $ref: '#/components/schemas/SmsContent'
+      required:
+        - to
+        - content
+    PhoneNumber:
+      title: PhoneNumber
+      type: string
+    SmsTemplate:
+      title: SmsTemplate
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        params:
+          type: array
+          items:
+            $ref: '#/components/schemas/SmsTemplateParam'
+      required:
+        - id
+        - params
+    SmsTemplateParam:
+      title: SmsTemplateParam
+      type: string
+    SmsContentMode:
+      title: SmsContentMode
+      type: string
+    SmsContent:
+      title: SmsContent
+      type: object
+      properties:
+        mode:
+          $ref: '#/components/schemas/SmsContentMode'
+        payload:
+          oneOf:
+            - $ref: '#/components/schemas/SmsTemplate'
+            - $ref: '#/components/schemas/Text'
+      required:
+        - mode
+        - payload
+    RegionCode:
+      title: RegionCode
+      type: string
+    PhoneNumberObject:
+      title: PhoneNumberObject
+      type: object
+      properties:
+        region:
+          $ref: '#/components/schemas/RegionCode'
+        number:
+          $ref: '#/components/schemas/PhoneNumber'
+      required:
+        - region
+        - number
+    SendStatus:
+      title: SendStatus
+      type: object
+      properties:
+        identifier:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - identifier
+        - code
+        - message
+  responses:
+    Ok:
+      description: Ok response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  parameters: {}
+  

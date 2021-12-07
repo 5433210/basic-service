@@ -1,0 +1,166 @@
+openapi: 3.0.0
+info:
+  title: captcha
+  version: '1.0'
+  contact: {}
+  description: Captcha API
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /captcha:
+    post:
+      tags: []
+      summary: ''
+      operationId: verifyCaptcha
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                      - ok
+                    properties:
+                      ok:
+                        type: boolean
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: verify captcha
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Captcha'
+    get:
+      tags: []
+      summary: ''
+      operationId: generateCaptcha
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                      - challenge
+                    properties:
+                      challenge:
+                        $ref: '#/components/schemas/Challenge'
+                required:
+                  - code
+                  - message
+                  - data
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+      description: get a captcha challenge
+      parameters:
+        - $ref: '#/components/parameters/challenge_mode'
+    parameters: []
+components:
+  schemas:
+    Captcha:
+      title: Captcha
+      type: object
+      properties:
+        mode:
+          $ref: '#/components/schemas/ChallengeMode'
+        try:
+          type: object
+        nonce:
+          type: string
+        timestamp:
+          type: string
+        signature:
+          type: string
+      required:
+        - mode
+        - try
+        - nonce
+        - timestamp
+        - signature
+    Challenge:
+      title: Challenge
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ChallengeData'
+        nonce:
+          type: string
+        salt:
+          type: integer
+      required:
+        - data
+        - nonce
+        - salt
+    OkResponse:
+      title: OkResponse
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    ErrorResponse:
+      title: ErrorResponse
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+      required:
+        - code
+        - message
+    ChallengeMode:
+      title: ChallengeMode
+      type: string
+    ChallengeData:
+      title: ChallengeData
+      type: object
+  responses:
+    Ok:
+      description: Ok response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  parameters:
+    challenge_mode:
+      name: challenge_mode
+      in: query
+      required: false
+      schema:
+        type: string
+      description: challenge type
