@@ -1,7 +1,6 @@
 package microservice
 
 import (
-	"strings"
 	"sync"
 
 	"stathat.com/c/consistent"
@@ -42,31 +41,6 @@ func NewNodeManager() *NodeManager {
 	}
 }
 
-func (mgr *NodeManager) GetNameById(id string) string {
-	sli := strings.Split(id, "/")
-
-	return sli[len(sli)-2]
-}
-
-func (mgr *NodeManager) HasMaster(name string) bool {
-	mgr.Lock()
-	defer mgr.Unlock()
-	if mgr.nodes == nil {
-		return false
-	}
-	log.Debugf("%+v", mgr.nodes)
-	nodes := mgr.nodes[name]
-	for _, node := range nodes {
-		if node.IsMaster {
-			log.Debug("node:" + node.UniqueId + " is master")
-
-			return true
-		}
-	}
-
-	return false
-}
-
 func (mgr *NodeManager) HasNode(nodeId string) bool {
 	mgr.Lock()
 	defer mgr.Unlock()
@@ -85,25 +59,6 @@ func (mgr *NodeManager) HasNode(nodeId string) bool {
 	}
 
 	return false
-}
-
-func (mgr *NodeManager) GetMaster(name string) string {
-	mgr.Lock()
-	defer mgr.Unlock()
-	nodes := mgr.nodes[name]
-
-	for _, node := range nodes {
-		if node.IsMaster {
-			return node.UniqueId
-		}
-	}
-
-	return ""
-}
-
-func (mgr *NodeManager) SetMaster(name string, node *ServiceNode) {
-	node.IsMaster = true
-	mgr.AddNode(node)
 }
 
 func (mgr *NodeManager) AddNode(node *ServiceNode) {
@@ -135,8 +90,7 @@ func (mgr *NodeManager) AddNode(node *ServiceNode) {
 }
 
 func (mgr *NodeManager) DelNode(id string) {
-	sli := strings.Split(id, "/")
-	name := sli[len(sli)-2]
+	name := GetNodeNameByNodeId(id)
 	mgr.Lock()
 	defer mgr.Unlock()
 	if _, exist := mgr.nodes[name]; exist {

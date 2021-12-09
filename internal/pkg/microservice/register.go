@@ -9,6 +9,7 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
 
+	"wailik.com/internal/pkg/constant"
 	"wailik.com/internal/pkg/errors"
 	"wailik.com/internal/pkg/log"
 )
@@ -18,21 +19,27 @@ const (
 )
 
 type Register struct {
-	cli       *clientv3.Client
+	client    *clientv3.Client
 	leaseId   clientv3.LeaseID
 	lease     clientv3.Lease
 	node      *ServiceNode
 	closeChan chan error
 }
 
-func NewRegister(node *ServiceNode, conf ClientConfig, mgr *NodeManager) (reg *Register, err error) {
+func NewRegister(node *ServiceNode, conf ClientConfig) (*Register, error) {
 	log.Info("new register")
-	r := &Register{}
-	r.closeChan = make(chan error)
-	r.node = node
-	r.cli, err = clientv3.New(clientv3.Config(conf))
+	client, err := clientv3.New(clientv3.Config(conf))
+	if err != nil {
+		return nil, err
+	}
 
-	return r, err
+	r := &Register{
+		client:    client,
+		closeChan: make(chan error),
+		node:      node,
+	}
+
+	return r, nil
 }
 
 func (r *Register) Run() {
@@ -54,7 +61,7 @@ func (r *Register) Run() {
 		}
 	}
 EXIT:
-	log.Infof("register exit...")
+	log.Infof("register exited")
 }
 
 func (r *Register) Stop() {
@@ -62,7 +69,7 @@ func (r *Register) Stop() {
 		return
 	}
 	close(r.closeChan)
-	log.Info("stop register")
+	log.Info("register stoped")
 }
 
 func (r *Register) register() error {
@@ -80,7 +87,7 @@ func (r *Register) register() error {
 func (r *Register) registerFair() error {
 	log.Debug("registerFair")
 
-	return r.updateNode()
+	return r.saveNode()
 }
 
 func (r *Register) registerMasterSlave() error {
@@ -88,7 +95,7 @@ func (r *Register) registerMasterSlave() error {
 	if err := r.setMaster(); err != nil {
 		return err
 	}
-	if err := r.updateNode(); err != nil {
+	if err := r.saveNode(); err != nil {
 		return err
 	}
 
@@ -99,18 +106,25 @@ func (r *Register) setMaster() error {
 	if r.node.RunMode != SrvcRunModeMasterSlave {
 		return nil
 	}
-	session, err := concurrency.NewSession(r.cli)
+	session, err := concurrency.NewSession(r.client, concurrency.WithTTL(_ttl))
 	if err != nil {
 		return err
 	}
 
 	defer session.Close()
 
-	masterKey := "master/" + r.node.Name
+	masterKey := constant.MasterPrifex + "/" + r.node.Name
 	mutex := concurrency.NewMutex(session, masterKey)
 	if err = mutex.Lock(context.TODO()); err != nil {
 		return err
 	}
+
+	defer func() {
+		err = mutex.Unlock(context.TODO())
+		if err != nil {
+			log.Fatal("unlock mutex failed")
+		}
+	}()
 
 	masterValue, err := r.getValue(masterKey)
 	if err != nil {
@@ -127,17 +141,13 @@ func (r *Register) setMaster() error {
 		log.Debug("set master:" + r.node.UniqueId)
 	}
 
-	if err = mutex.Lock(context.TODO()); err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func (r *Register) updateNode() error {
+func (r *Register) saveNode() error {
 	r.leaseId = 0
-	kv := clientv3.NewKV(r.cli)
-	r.lease = clientv3.NewLease(r.cli)
+	kv := clientv3.NewKV(r.client)
+	r.lease = clientv3.NewLease(r.client)
 	leaseResp, err := r.lease.Grant(context.TODO(), _ttl)
 	if err != nil {
 		return err
@@ -175,7 +185,7 @@ func (r *Register) keepalive() error {
 }
 
 func (r *Register) revoke() error {
-	_, err := r.cli.Revoke(context.TODO(), r.leaseId)
+	_, err := r.client.Revoke(context.TODO(), r.leaseId)
 	if err != nil {
 		return err
 	}
@@ -185,15 +195,13 @@ func (r *Register) revoke() error {
 }
 
 func (r *Register) getValue(key string) (string, error) {
-	kv := clientv3.NewKV(r.cli)
+	kv := clientv3.NewKV(r.client)
 	resp, err := kv.Get(context.TODO(), key)
 	if err != nil {
 		return "", err
 	}
 	if len(resp.Kvs) > 0 {
 		for _, v := range resp.Kvs {
-			// log.Debugf("get value(%+v) of key(%+v)", string(v.Value), key)
-
 			return string(v.Value), nil
 		}
 	}
@@ -204,13 +212,11 @@ func (r *Register) getValue(key string) (string, error) {
 }
 
 func (r *Register) setValue(key string, value string) error {
-	kv := clientv3.NewKV(r.cli)
+	kv := clientv3.NewKV(r.client)
 	_, err := kv.Put(context.TODO(), key, value)
 	if err != nil {
 		return err
 	}
-
-	// log.Debugf("put key(%+v) value(%+v)", key, value)
 
 	return nil
 }

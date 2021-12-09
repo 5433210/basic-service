@@ -9,6 +9,7 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 
+	"wailik.com/internal/pkg/constant"
 	"wailik.com/internal/pkg/log"
 )
 
@@ -51,7 +52,7 @@ func (d *Discovery) Pull() error {
 		log.Debugf("pull node:%+v", node)
 	}
 
-	resp, err = kv.Get(context.TODO(), "master/", clientv3.WithPrefix())
+	resp, err = kv.Get(context.TODO(), constant.MasterPrifex+"/", clientv3.WithPrefix())
 	if err != nil {
 		log.Fatalf("kv.Get err:%+v", err)
 
@@ -127,13 +128,13 @@ func (d *Discovery) watchEvent(evs []*clientv3.Event) {
 func (d *Discovery) removeMasterKey(key string) error {
 	client := d.cli
 	nodeName := GetNodeNameByNodeId(key)
-	session, err := concurrency.NewSession(client)
+	session, err := concurrency.NewSession(client, concurrency.WithTTL(_ttl))
 	if err != nil {
 		return err
 	}
 	defer session.Close()
 
-	masterKey := "master/" + nodeName
+	masterKey := constant.MasterPrifex + "/" + nodeName
 
 	mutex := concurrency.NewMutex(session, masterKey)
 	if err = mutex.Lock(context.TODO()); err != nil {

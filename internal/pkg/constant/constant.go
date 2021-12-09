@@ -76,6 +76,7 @@ const (
 	FldChallenge     = "challenge"
 
 	DiscoveryPrifex = "discovery"
+	MasterPrifex    = "master"
 
 	ServiceNameCourier = "courier"
 	ServiceNameAuthn   = "authn"

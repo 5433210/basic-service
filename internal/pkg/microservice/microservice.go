@@ -1,11 +1,7 @@
 package microservice
 
 import (
-	"encoding/json"
-	"io/ioutil"
-
 	"github.com/coreos/etcd/clientv3"
-	"gopkg.in/yaml.v2"
 
 	"wailik.com/internal/pkg/log"
 )
@@ -61,7 +57,7 @@ func (s *MicroServiceObject) GetMicroService() MicroService {
 
 func New(node ServiceNode, clientConfigPath string) (*microService, error) {
 	log.Info("new micro service...")
-	conf, err := loadClientConfig(clientConfigPath)
+	conf, err := LoadClientConfig(clientConfigPath)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +73,7 @@ func New(node ServiceNode, clientConfigPath string) (*microService, error) {
 		return nil, err
 	}
 
-	register, err := NewRegister(&node, *conf, manager)
+	register, err := NewRegister(&node, *conf)
 	if err != nil {
 		return nil, err
 	}
@@ -113,42 +109,4 @@ func (ms *microService) Pull() error {
 
 func (ms *microService) Pick(name string, value string) *ServiceNode {
 	return ms.manager.Pick(name, value)
-}
-
-func loadClientConfig(path string) (*ClientConfig, error) {
-	conf := clientv3.Config{}
-	confY := make(map[interface{}]interface{})
-	f, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = yaml.Unmarshal(f, &confY); err != nil {
-		return nil, err
-	}
-
-	log.Debugf("confY:%+v", confY)
-
-	confJ := make(map[string]interface{})
-	for key, value := range confY {
-		switch key := key.(type) {
-		case string:
-			confJ[key] = value
-		}
-	}
-
-	j, err := json.Marshal(&confJ)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Debugf("json:%+v", string(j))
-
-	if err := json.Unmarshal(j, &conf); err != nil {
-		return nil, err
-	}
-
-	log.Debugf("config:%+v", conf)
-
-	return (*ClientConfig)(&conf), nil
 }
