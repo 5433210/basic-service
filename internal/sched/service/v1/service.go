@@ -2,13 +2,17 @@ package servicev1
 
 import (
 	"wailik.com/internal/pkg/log"
+	"wailik.com/internal/pkg/microservice"
 )
 
 type Service interface {
 	Sched() *schedSrvc
+	microservice.MicroServiceHelper
 }
 
-type service struct{}
+type service struct {
+	microservice.MicroServiceObject
+}
 
 var _ Service = &service{}
 

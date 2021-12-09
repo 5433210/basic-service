@@ -10,6 +10,22 @@ import (
 	"wailik.com/internal/pkg/log"
 )
 
+type (
+	SrvcRunMode  string
+	SrvcPickMode string
+)
+
+const (
+	SrvcRunModeFair        SrvcRunMode = "fair"
+	SrvcRunModeMasterSlave SrvcRunMode = "master-slave"
+)
+
+const (
+	SrvcPickModeRandom SrvcPickMode = "random"
+	SrvcPickModeHash   SrvcPickMode = "hash"
+	SrvcPickModeMaster SrvcPickMode = "master"
+)
+
 type ClientConfig clientv3.Config
 
 type microService struct {
@@ -23,7 +39,7 @@ type MicroService interface {
 	Run()
 	Stop()
 	Pull() error
-	Pick(name string) *ServiceNode
+	Pick(name string, value string) *ServiceNode
 }
 
 type MicroServiceHelper interface {
@@ -44,6 +60,7 @@ func (s *MicroServiceObject) GetMicroService() MicroService {
 }
 
 func New(node ServiceNode, clientConfigPath string) (*microService, error) {
+	log.Info("new micro service...")
 	conf, err := loadClientConfig(clientConfigPath)
 	if err != nil {
 		return nil, err
@@ -60,16 +77,17 @@ func New(node ServiceNode, clientConfigPath string) (*microService, error) {
 		return nil, err
 	}
 
-	register, err := NewRegister(&node, *conf)
+	register, err := NewRegister(&node, *conf, manager)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = register.register(); err != nil {
-		return nil, err
-	}
-
-	return &microService{discovery: discovery, register: register, manager: manager, running: false}, nil
+	return &microService{
+		discovery: discovery,
+		register:  register,
+		manager:   manager,
+		running:   false,
+	}, nil
 }
 
 func (ms *microService) Run() {
@@ -93,8 +111,8 @@ func (ms *microService) Pull() error {
 	return ms.discovery.Pull()
 }
 
-func (ms *microService) Pick(name string) *ServiceNode {
-	return ms.manager.Pick(name)
+func (ms *microService) Pick(name string, value string) *ServiceNode {
+	return ms.manager.Pick(name, value)
 }
 
 func loadClientConfig(path string) (*ClientConfig, error) {

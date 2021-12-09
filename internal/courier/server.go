@@ -33,6 +33,8 @@ func (svr Server) Run() error {
 		Addr:     "http://" + addr,
 		Name:     svr.Name,
 		UniqueId: constant.DiscoveryPrifex + "/" + constant.ServiceNameCourier + "/" + xid.New().String(),
+		PickMode: microservice.SrvcPickModeRandom,
+		RunMode:  microservice.SrvcRunModeFair,
 	}
 	msrvc, err := microservice.New(node, svr.ConfPath)
 	if err != nil {

@@ -81,6 +81,7 @@ const (
 	ServiceNameAuthn   = "authn"
 	ServiceNameAuthz   = "authz"
 	ServiceNameCaptcha = "captcha"
+	ServiceNameSched   = "sched"
 
 	CourierTypeEmail = "email"
 	CourierTypeSms   = "sms"
@@ -90,7 +91,7 @@ const (
 	EmailModeHtml           = "html"
 	EmailOtpTemplateId      = "19768"
 	EmailOtpTemplatePattern = "{\"code\":\"%s\"}"
-	EmailAddrNoReply        = "noreply@taijik.com"
+	EmailOtpAddrNoReply     = "noreply@taijik.com"
 	EmailOtpSubject         = "动态验证码"
 
 	FldJobId = "job_id"

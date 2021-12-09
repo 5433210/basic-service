@@ -13,7 +13,7 @@ import (
 )
 
 func SendEmail(s *service, toAddr string, code string) error {
-	node := s.GetMicroService().Pick(constant.ServiceNameCourier)
+	node := s.GetMicroService().Pick(constant.ServiceNameCourier, "")
 	if node == nil {
 		return errors.NewErrorC(errors.ErrCdCommon, nil)
 	}
@@ -29,7 +29,7 @@ func SendEmail(s *service, toAddr string, code string) error {
 
 	// todo 方法链builder重构
 	body := apiv1courier.SendEmailJSONRequestBody{}
-	body.From = constant.EmailAddrNoReply
+	body.From = constant.EmailOtpAddrNoReply
 	body.To = make([]apiv1courier.EmailAddress, 1)
 	body.To[0] = apiv1courier.EmailAddress(toAddr)
 	template := apiv1courier.EmailTemplate{
