@@ -27,17 +27,18 @@ type ServiceGroup struct {
 type NodeManager struct {
 	sync.RWMutex
 	// <name,<id,node>>
-	nodes  map[string]map[string]*ServiceNode
+	nodes map[string]map[string]*ServiceNode
+	// <name, group>
 	groups map[string]*ServiceGroup
 
-	hashNodes map[string]*consistent.Consistent
+	consistents map[string]*consistent.Consistent
 }
 
 func NewNodeManager() *NodeManager {
 	return &NodeManager{
-		nodes:     map[string]map[string]*ServiceNode{},
-		hashNodes: map[string]*consistent.Consistent{},
-		groups:    map[string]*ServiceGroup{},
+		nodes:       map[string]map[string]*ServiceNode{},
+		consistents: map[string]*consistent.Consistent{},
+		groups:      map[string]*ServiceGroup{},
 	}
 }
 
@@ -82,10 +83,10 @@ func (mgr *NodeManager) AddNode(node *ServiceNode) {
 	mgr.nodes[node.Name][node.UniqueId] = node
 
 	if node.PickMode == SrvcPickModeHash {
-		if _, exist := mgr.hashNodes[node.Name]; !exist {
-			mgr.hashNodes[node.Name] = consistent.New()
+		if _, exist := mgr.consistents[node.Name]; !exist {
+			mgr.consistents[node.Name] = consistent.New()
 		}
-		mgr.hashNodes[node.Name].Add(node.UniqueId)
+		mgr.consistents[node.Name].Add(node.UniqueId)
 	}
 }
 
@@ -96,14 +97,14 @@ func (mgr *NodeManager) DelNode(id string) {
 	if _, exist := mgr.nodes[name]; exist {
 		if node, exist := mgr.nodes[name][id]; exist {
 			if node.PickMode == SrvcPickModeHash {
-				mgr.hashNodes[node.Name].Remove(node.UniqueId)
+				mgr.consistents[node.Name].Remove(node.UniqueId)
 			}
 		}
 		delete(mgr.nodes[name], id)
 	}
 }
 
-func (mgr *NodeManager) Pick(name string, hashValue string) *ServiceNode {
+func (mgr *NodeManager) Pick(name string, hash string) *ServiceNode {
 	mgr.RLock()
 	defer mgr.RUnlock()
 	nodes, exist := mgr.nodes[name]
@@ -123,7 +124,7 @@ func (mgr *NodeManager) Pick(name string, hashValue string) *ServiceNode {
 	}
 
 	if mode == SrvcPickModeHash {
-		id, err := mgr.hashNodes[name].Get(hashValue)
+		id, err := mgr.consistents[name].Get(hash)
 		if err != nil {
 			return nil
 		}
