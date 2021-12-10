@@ -6,6 +6,10 @@ import (
 	"wailik.com/internal/pkg/log"
 )
 
+const (
+	_ttl = 10
+)
+
 type (
 	SrvcRunMode  string
 	SrvcPickMode string
@@ -34,7 +38,7 @@ type microService struct {
 type MicroService interface {
 	Run()
 	Stop()
-	Pull() error
+	// Pull() error
 	Pick(name string, value string) *ServiceNode
 }
 
@@ -69,10 +73,6 @@ func New(node ServiceNode, clientConfigPath string) (*microService, error) {
 		return nil, err
 	}
 
-	if err = discovery.Pull(); err != nil {
-		return nil, err
-	}
-
 	register, err := NewRegister(&node, *conf)
 	if err != nil {
 		return nil, err
@@ -87,6 +87,7 @@ func New(node ServiceNode, clientConfigPath string) (*microService, error) {
 }
 
 func (ms *microService) Run() {
+	log.Info("run micro service...")
 	if ms.running {
 		return
 	}
@@ -103,9 +104,9 @@ func (ms *microService) Stop() {
 	}
 }
 
-func (ms *microService) Pull() error {
-	return ms.discovery.Pull()
-}
+// func (ms *microService) Pull() error {
+// 	return ms.discovery.pull()
+// }
 
 func (ms *microService) Pick(name string, value string) *ServiceNode {
 	return ms.manager.Pick(name, value)

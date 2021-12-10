@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 
 	"wailik.com/internal/pkg/constant"
@@ -14,27 +14,30 @@ import (
 )
 
 type Discovery struct {
-	cli *clientv3.Client
-	mgr *NodeManager
-	cls chan error
+	client    *clientv3.Client
+	manager   *NodeManager
+	closeChan chan error
+	timer     *time.Ticker
+	watcher   clientv3.Watcher
+	watchChan clientv3.WatchChan
 }
 
-func NewDiscovery(conf ClientConfig, mgr *NodeManager) (*Discovery, error) {
-	if mgr == nil {
+func NewDiscovery(conf ClientConfig, manager *NodeManager) (*Discovery, error) {
+	if manager == nil {
 		return nil, fmt.Errorf("mgr == nil")
 	}
 
-	cli, err := clientv3.New(clientv3.Config(conf))
+	client, err := clientv3.New(clientv3.Config(conf))
 	if err != nil {
 		return nil, err
 	}
 
-	return &Discovery{mgr: mgr, cli: cli, cls: make(chan error)}, nil
+	return &Discovery{manager: manager, client: client, closeChan: make(chan error)}, nil
 }
 
-func (d *Discovery) Pull() error {
-	kv := clientv3.NewKV(d.cli)
-	resp, err := kv.Get(context.TODO(), "discovery/", clientv3.WithPrefix())
+func (d *Discovery) pull() error {
+	kv := clientv3.NewKV(d.client)
+	resp, err := kv.Get(context.TODO(), constant.DiscoveryPrifex+"/", clientv3.WithPrefix())
 	if err != nil {
 		log.Fatalf("kv.Get err:%+v", err)
 
@@ -48,56 +51,61 @@ func (d *Discovery) Pull() error {
 
 			continue
 		}
-		d.mgr.AddNode(node)
+		d.manager.AddNode(node)
 		log.Debugf("pull node:%+v", node)
 	}
 
-	resp, err = kv.Get(context.TODO(), constant.MasterPrifex+"/", clientv3.WithPrefix())
-	if err != nil {
-		log.Fatalf("kv.Get err:%+v", err)
+	// resp, err = kv.Get(context.TODO(), constant.MasterPrifex+"/", clientv3.WithPrefix())
+	// if err != nil {
+	// 	log.Fatalf("kv.Get err:%+v", err)
 
-		return err
-	}
-	for _, v := range resp.Kvs {
-		nodeId := string(v.Value)
-		if nodeId == "" {
-			log.Debug("nodeId is null")
+	// 	return err
+	// }
+	// for _, v := range resp.Kvs {
+	// 	nodeId := string(v.Value)
+	// 	if nodeId == "" {
+	// 		break
+	// 	}
 
-			break
-		}
-		log.Debug("nodeId:" + nodeId)
-		if !d.mgr.HasNode(nodeId) {
-			if err := d.removeMasterKey(nodeId); err != nil {
-				log.Fatalf("removeMasterKey(%+v) failed", nodeId)
-
-				return err
-			}
-			log.Debugf("remove not use master key(%+v)", string(v.Key))
-		}
-	}
+	// 	if !d.manager.HasNode(nodeId) {
+	// 		log.Debugf("try to remove node:(%+v) of service(%+v) unavailable", nodeId, v.Key)
+	// 		if err := d.removeMasterNode(nodeId); err != nil {
+	// 			return err
+	// 		}
+	// 		log.Infof("removed master node(%+v) of service(%+v) unavailable ", string(v.Value), string(v.Key))
+	// 	}
+	// }
 
 	return nil
 }
 
 func (d *Discovery) Run() {
-	watcher := clientv3.NewWatcher(d.cli)
-	watchChan := watcher.Watch(context.TODO(), "discovery", clientv3.WithPrefix())
+	log.Info("discovery running...")
+	d.watcher = clientv3.NewWatcher(d.client)
+	d.watchChan = d.watcher.Watch(context.TODO(), constant.DiscoveryPrifex, clientv3.WithPrefix())
+	d.timer = time.NewTicker(_ttl * time.Second / 2)
+
 	for {
 		select {
-		case resp := <-watchChan:
+		case <-d.timer.C:
+			if err := d.pull(); err != nil {
+				log.Fatalf("pull error:%+v", err)
+			}
+		case resp := <-d.watchChan:
 			d.watchEvent(resp.Events)
-		case <-d.cls:
+		case <-d.closeChan:
 			goto EXIT
 		}
 	}
 
 EXIT:
-	log.Infof("discovery exit...")
+	log.Infof("discovery exited")
 }
 
 func (d *Discovery) Stop() {
-	close(d.cls)
-	log.Info("stop discovery")
+	d.watcher.Close()
+	close(d.closeChan)
+	log.Info("discovery stopped")
 }
 
 func (d *Discovery) watchEvent(evs []*clientv3.Event) {
@@ -111,59 +119,68 @@ func (d *Discovery) watchEvent(evs []*clientv3.Event) {
 
 				continue
 			}
-			d.mgr.AddNode(node)
-			log.Infof("new node:%s", string(ev.Kv.Value))
+			d.manager.AddNode(node)
+			log.Infof("add node:%s data:%+v", string(ev.Kv.Value), node)
 		case mvccpb.DELETE:
-			id := string(ev.Kv.Key)
-			d.mgr.DelNode(id)
-			err := d.removeMasterKey(id)
-			if err != nil {
-				continue
-			}
-			log.Infof("del node:%s data:%s", string(ev.Kv.Key), string(ev.Kv.Value))
+			nodeId := string(ev.Kv.Key)
+			d.manager.DelNode(nodeId)
+			// err := d.removeMasterNode(nodeId)
+			// if err != nil {
+			// 	continue
+			// }
+			log.Infof("del node:%s", nodeId)
 		}
 	}
 }
 
-func (d *Discovery) removeMasterKey(key string) error {
-	client := d.cli
-	nodeName := GetNodeNameByNodeId(key)
-	session, err := concurrency.NewSession(client, concurrency.WithTTL(_ttl))
-	if err != nil {
-		return err
-	}
-	defer session.Close()
+// func (d *Discovery) removeMasterNode(masterNodeId string) error {
+// 	client := d.client
+// 	nodeName := GetNodeNameFromNodeId(masterNodeId)
+// 	session, err := concurrency.NewSession(client, concurrency.WithTTL(_ttl))
+// 	if err != nil {
+// 		log.Fatalf("create new session err:%+v", err)
 
-	masterKey := constant.MasterPrifex + "/" + nodeName
+// 		return err
+// 	}
+// 	defer session.Close()
 
-	mutex := concurrency.NewMutex(session, masterKey)
-	if err = mutex.Lock(context.TODO()); err != nil {
-		return err
-	}
-	defer func() {
-		err = mutex.Unlock(context.TODO())
-		if err != nil {
-			log.Fatal("unlock mutex failed")
-		}
-	}()
+// 	masterNodeKey := constant.MasterPrifex + "/" + nodeName
 
-	kv := clientv3.NewKV(client)
-	resp, err := kv.Get(context.TODO(), masterKey)
-	if err != nil {
-		return err
-	}
-	if len(resp.Kvs) > 0 {
-		for _, v := range resp.Kvs {
-			if string(v.Value) == key {
-				_, err = kv.Delete(context.TODO(), masterKey)
-				if err != nil {
-					return err
-				}
+// 	mutex := concurrency.NewMutex(session, masterNodeKey)
+// 	if err = mutex.Lock(context.TODO()); err != nil {
+// 		log.Fatalf("lock mutex err:%+v", err)
 
-				log.Debugf("remove masterKey:%+v value:%+v", v.Key, string(v.Value))
-			}
-		}
-	}
+// 		return err
+// 	}
+// 	defer func() {
+// 		err = mutex.Unlock(context.TODO())
+// 		if err != nil {
+// 			log.Fatalf("unlock mutex err:%+v", err)
+// 		}
+// 	}()
 
-	return nil
-}
+// 	kv := clientv3.NewKV(client)
+// 	resp, err := kv.Get(context.TODO(), masterNodeKey)
+// 	if err != nil {
+// 		log.Fatalf("kv get err:%+v", err)
+
+// 		return err
+// 	}
+// 	if len(resp.Kvs) > 0 {
+// 		for _, v := range resp.Kvs {
+// 			nodeId := string(v.Value)
+// 			if nodeId == masterNodeId {
+// 				_, err = kv.Delete(context.TODO(), masterNodeKey)
+// 				if err != nil {
+// 					log.Fatalf("kv delete err:%+v", err)
+
+// 					return err
+// 				}
+
+// 				log.Infof("removed master node(%+v) of service(%+v) unavailable ", masterNodeId, masterNodeKey)
+// 			}
+// 		}
+// 	}
+
+// 	return nil
+// }

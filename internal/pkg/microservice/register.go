@@ -14,16 +14,13 @@ import (
 	"wailik.com/internal/pkg/log"
 )
 
-const (
-	_ttl = 10
-)
-
 type Register struct {
 	client    *clientv3.Client
 	leaseId   clientv3.LeaseID
 	lease     clientv3.Lease
 	node      *ServiceNode
 	closeChan chan error
+	timer     *time.Ticker
 }
 
 func NewRegister(node *ServiceNode, conf ClientConfig) (*Register, error) {
@@ -44,17 +41,17 @@ func NewRegister(node *ServiceNode, conf ClientConfig) (*Register, error) {
 
 func (r *Register) Run() {
 	log.Info("register running...")
-	dur := time.Second * 1
-	timer := time.NewTicker(dur)
+	// 续租间隔为租约周期的一半，保证租约持续有效
+	r.timer = time.NewTicker(time.Second * _ttl / 2)
 
 	if err := r.register(); err != nil {
 		return
 	}
 	for {
 		select {
-		case <-timer.C:
+		case <-r.timer.C:
 			if err := r.keepalive(); err != nil {
-				return
+				log.Fatalf("keepalive error:%+v", err)
 			}
 		case <-r.closeChan:
 			goto EXIT
@@ -65,11 +62,13 @@ EXIT:
 }
 
 func (r *Register) Stop() {
+	r.lease.Close()
 	if err := r.revoke(); err != nil {
 		return
 	}
+	r.timer.Stop()
 	close(r.closeChan)
-	log.Info("register stoped")
+	log.Info("register stopped")
 }
 
 func (r *Register) register() error {
@@ -86,80 +85,92 @@ func (r *Register) register() error {
 
 func (r *Register) registerFair() error {
 	log.Debug("registerFair")
+	if err := r.grant(); err != nil {
+		return err
+	}
 
 	return r.saveNode()
 }
 
 func (r *Register) registerMasterSlave() error {
 	log.Debug("registerMasterSlave")
-	if err := r.setMaster(); err != nil {
+	if err := r.grant(); err != nil {
 		return err
 	}
-	if err := r.saveNode(); err != nil {
+	if err := r.campaignMaster(); err != nil {
 		return err
 	}
 
-	return nil
+	return r.saveNode()
 }
 
-func (r *Register) setMaster() error {
-	if r.node.RunMode != SrvcRunModeMasterSlave {
-		return nil
-	}
-	session, err := concurrency.NewSession(r.client, concurrency.WithTTL(_ttl))
+func (r *Register) campaignMaster() error {
+	session, err := concurrency.NewSession(r.client,
+		concurrency.WithTTL(_ttl))
 	if err != nil {
+		log.Fatalf("create session error:%+v", err)
+
 		return err
 	}
 
 	defer session.Close()
 
-	masterKey := constant.MasterPrifex + "/" + r.node.Name
-	mutex := concurrency.NewMutex(session, masterKey)
+	masterNodeKey := constant.MasterPrifex + "/" + r.node.Name
+	mutex := concurrency.NewMutex(session, masterNodeKey)
 	if err = mutex.Lock(context.TODO()); err != nil {
+		log.Fatalf("lock mutex error:%+v", err)
+
 		return err
 	}
 
 	defer func() {
 		err = mutex.Unlock(context.TODO())
 		if err != nil {
-			log.Fatal("unlock mutex failed")
+			log.Fatalf("unlock mutex error:%+v", err)
 		}
 	}()
 
-	masterValue, err := r.getValue(masterKey)
+	masterNodeId, err := r.getValue(masterNodeKey)
 	if err != nil {
 		return err
 	}
 
-	if masterValue == "" {
-		log.Debug("no master")
-		err = r.setValue(masterKey, r.node.UniqueId)
+	log.Debugf("masterNodeId:%+v", masterNodeId)
+
+	if masterNodeId == "" {
+		log.Debugf("no master node for service(%s) yet", r.node.Name)
+		err = r.setValue(masterNodeKey, r.node.UniqueId)
 		if err != nil {
 			return err
 		}
 		r.node.IsMaster = true
-		log.Debug("set master:" + r.node.UniqueId)
+		log.Debugf("node(%s) campaigned service(%s) master node!",
+			r.node.UniqueId, r.node.Name)
 	}
 
 	return nil
 }
 
 func (r *Register) saveNode() error {
-	r.leaseId = 0
 	kv := clientv3.NewKV(r.client)
-	r.lease = clientv3.NewLease(r.client)
-	leaseResp, err := r.lease.Grant(context.TODO(), _ttl)
-	if err != nil {
-		return err
-	}
-
 	data, _ := json.Marshal(r.node)
-	_, err = kv.Put(context.TODO(), r.node.UniqueId, string(data), clientv3.WithLease(leaseResp.ID))
+	_, err := kv.Put(context.TODO(), r.node.UniqueId, string(data), clientv3.WithLease(r.leaseId))
 	if err != nil {
 		return err
 	}
-	r.leaseId = leaseResp.ID
 	log.Infof("registered leaseId:%+v", r.leaseId)
+
+	return nil
+}
+
+func (r *Register) grant() error {
+	r.leaseId = 0
+	r.lease = clientv3.NewLease(r.client)
+	resp, err := r.lease.Grant(context.TODO(), _ttl)
+	if err != nil {
+		return err
+	}
+	r.leaseId = resp.ID
 
 	return nil
 }
@@ -168,7 +179,7 @@ func (r *Register) keepalive() error {
 	_, err := r.lease.KeepAliveOnce(context.TODO(), r.leaseId)
 	if err != nil {
 		if errors.Is(err, rpctypes.ErrLeaseNotFound) {
-			log.Debug("keep alive")
+			log.Infof("lease(%s) not found, register again", r.leaseId)
 			if err = r.register(); err != nil {
 				return err
 			}
@@ -177,8 +188,10 @@ func (r *Register) keepalive() error {
 		}
 	}
 
-	if err = r.setMaster(); err != nil {
-		return err
+	if r.node.RunMode == SrvcRunModeMasterSlave {
+		if err = r.campaignMaster(); err != nil {
+			return err
+		}
 	}
 
 	return err
@@ -206,14 +219,14 @@ func (r *Register) getValue(key string) (string, error) {
 		}
 	}
 
-	log.Debug("got no value")
-
 	return "", nil
 }
 
 func (r *Register) setValue(key string, value string) error {
+	log.Debugf("lease id:%+v", r.leaseId)
 	kv := clientv3.NewKV(r.client)
-	_, err := kv.Put(context.TODO(), key, value)
+	// 通过租约来进行节点存活的判断。租约过期键值对自动失效，意味着对应节点已经失效，无法续租保活
+	_, err := kv.Put(context.TODO(), key, value, clientv3.WithLease(r.leaseId))
 	if err != nil {
 		return err
 	}

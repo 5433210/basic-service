@@ -49,7 +49,7 @@ func (mgr *NodeManager) HasNode(nodeId string) bool {
 	}
 	log.Debugf("%+v", mgr.nodes)
 	log.Debugf("%+v", nodeId)
-	name := GetNodeNameByNodeId(nodeId)
+	name := GetNodeNameFromNodeId(nodeId)
 	log.Debugf("node name:%+v", name)
 	nodes := mgr.nodes[name]
 	for _, node := range nodes {
@@ -90,7 +90,7 @@ func (mgr *NodeManager) AddNode(node *ServiceNode) {
 }
 
 func (mgr *NodeManager) DelNode(id string) {
-	name := GetNodeNameByNodeId(id)
+	name := GetNodeNameFromNodeId(id)
 	mgr.Lock()
 	defer mgr.Unlock()
 	if _, exist := mgr.nodes[name]; exist {

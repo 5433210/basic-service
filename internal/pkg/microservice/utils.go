@@ -11,7 +11,7 @@ import (
 	"wailik.com/internal/pkg/log"
 )
 
-func GetNodeNameByNodeId(id string) string {
+func GetNodeNameFromNodeId(id string) string {
 	sli := strings.Split(id, "/")
 	log.Debugf("%+v", len(sli))
 
