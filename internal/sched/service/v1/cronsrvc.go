@@ -38,7 +38,7 @@ type CronSrvc struct {
 
 func NewCronSrvc(s *service) *CronSrvc {
 	srvc := &CronSrvc{
-		cron:  cron.New(),
+		cron:  cron.New(cron.WithSeconds()),
 		ids:   map[string]cron.EntryID{},
 		store: s.store,
 	}
