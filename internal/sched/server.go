@@ -13,17 +13,19 @@ import (
 )
 
 type Server struct {
-	Port     uint16
-	IpAddr   string
-	LogPath  string
-	Name     string
-	ConfPath string
+	Port          uint16
+	IpAddr        string
+	LogPath       string
+	Name          string
+	ConfPath      string
+	StoreEndpoint []string
+	StorePoolSize int
 }
 
 func (svr Server) Run() error {
 	log.Debug("server running...")
 	app := fiber.New(fiber.Config{})
-	srvc, err := servicev1.New()
+	srvc, err := servicev1.New(svr.StoreEndpoint, svr.StorePoolSize)
 	if err != nil {
 		panic(err)
 	}
