@@ -8,6 +8,7 @@ import (
 
 type Service interface {
 	Sched() *schedSrvc
+	Cron() *CronSrvc
 	microservice.MicroServiceHelper
 }
 
@@ -19,6 +20,7 @@ type service struct {
 var _ Service = &service{}
 
 func (s *service) Sched() *schedSrvc { return newSchedSrvc(s) }
+func (s *service) Cron() *CronSrvc   { return NewCronSrvc(s) }
 
 func New(endpoint []string, size int) (Service, error) {
 	log.Info("new service...")

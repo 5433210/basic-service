@@ -113,6 +113,7 @@ require (
 
 require (
 	github.com/coreos/go-semver v0.3.0 // indirect
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/tikv/pd v1.1.0-beta.0.20211029083450-e65f0c55b6ae // indirect
 )
 

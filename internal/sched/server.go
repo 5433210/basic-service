@@ -20,6 +20,7 @@ type Server struct {
 	ConfPath      string
 	StoreEndpoint []string
 	StorePoolSize int
+	cronSrvc      *servicev1.CronSrvc
 }
 
 func (svr Server) Run() error {
@@ -50,6 +51,12 @@ func (svr Server) Run() error {
 	srvc.SetMicroService(msrvc)
 
 	msrvc.Run()
+
+	svr.cronSrvc = srvc.Cron()
+	if err = svr.cronSrvc.Load(); err != nil {
+		return err
+	}
+	svr.cronSrvc.Run()
 
 	return app.Listen(addr)
 }
