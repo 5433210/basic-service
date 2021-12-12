@@ -38,7 +38,7 @@ func (svr Server) Run() error {
 		RunMode:  microservice.SrvcRunModeFair,
 		PickMode: microservice.SrvcPickModeHash,
 	}
-	msrvc, err := microservice.New(node, svr.ConfPath)
+	msrvc, err := microservice.New(node, svr.ConfPath, nil, nil)
 	if err != nil {
 		log.Debugf("new micro service error")
 

@@ -176,6 +176,8 @@ components:
           type: string
         disabled:
           type: boolean
+        onetime:
+          type: boolean
         next:
           type: string
           format: date-time
@@ -186,9 +188,11 @@ components:
           type: object
       required:
         - id
+        - owner
+        - schedule
         - timezone
         - disabled
-        - next
+        - onetime
         - executor
     Execution:
       title: Execution

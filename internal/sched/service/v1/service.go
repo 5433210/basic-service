@@ -8,19 +8,21 @@ import (
 
 type Service interface {
 	Sched() *schedSrvc
-	Cron() *CronSrvc
 	microservice.MicroServiceHelper
+	Run()
+	Stop()
+	LoadSchedules() error
 }
 
 type service struct {
 	microservice.MicroServiceObject
-	store *store.Store
+	store     *store.Store
+	scheduler *Scheduler
 }
 
 var _ Service = &service{}
 
 func (s *service) Sched() *schedSrvc { return newSchedSrvc(s) }
-func (s *service) Cron() *CronSrvc   { return NewCronSrvc(s) }
 
 func New(endpoint []string, size int) (Service, error) {
 	log.Info("new service...")
@@ -31,10 +33,24 @@ func New(endpoint []string, size int) (Service, error) {
 	}
 
 	var servie Service = &service{
-		store: store,
+		store:     store,
+		scheduler: NewScheduler(store),
 	}
 
 	log.Info("service created")
 
 	return servie, nil
+}
+
+func (s *service) Run() {
+	s.GetMicroService().Run()
+	s.scheduler.Run()
+}
+
+func (s *service) Stop() {
+	s.scheduler.Stop()
+}
+
+func (s *service) LoadSchedules() error {
+	return s.scheduler.Load()
 }

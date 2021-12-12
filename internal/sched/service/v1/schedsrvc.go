@@ -56,7 +56,7 @@ func (s *schedSrvc) CreateJob(job apiv1.Job) error {
 	}
 	_ = txn.Commit(context.Background())
 
-	err = s.service.Cron().Add(job)
+	err = s.service.scheduler.Add(job)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (s *schedSrvc) DeleteJob(jobId string) error {
 	}
 	_ = txn.Commit(context.Background())
 
-	err = s.service.Cron().Remove(jobId)
+	err = s.service.scheduler.Remove(jobId)
 	if err != nil {
 		return err
 	}
@@ -126,11 +126,11 @@ func (s *schedSrvc) UpdateJob(jobId string, job apiv1.Job) error {
 	}
 	_ = txn.Commit(context.Background())
 
-	err = s.service.Cron().Remove(jobId)
+	err = s.service.scheduler.Remove(jobId)
 	if err != nil {
 		return err
 	}
-	err = s.service.Cron().Add(job)
+	err = s.service.scheduler.Add(job)
 	if err != nil {
 		return err
 	}

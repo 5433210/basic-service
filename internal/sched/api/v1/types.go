@@ -37,9 +37,10 @@ type Job struct {
 	Executor Executor                `json:"executor"`
 	Id       string                  `json:"id"`
 	Name     *string                 `json:"name,omitempty"`
-	Next     time.Time               `json:"next"`
-	Owner    *string                 `json:"owner,omitempty"`
-	Schedule *string                 `json:"schedule,omitempty"`
+	Next     *time.Time              `json:"next,omitempty"`
+	Onetime  bool                    `json:"onetime"`
+	Owner    string                  `json:"owner"`
+	Schedule string                  `json:"schedule"`
 	Timezone string                  `json:"timezone"`
 }
 

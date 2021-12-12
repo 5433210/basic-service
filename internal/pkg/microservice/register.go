@@ -15,15 +15,17 @@ import (
 )
 
 type Register struct {
-	client    *clientv3.Client
-	leaseId   clientv3.LeaseID
-	lease     clientv3.Lease
-	node      *ServiceNode
-	closeChan chan error
-	timer     *time.Ticker
+	client     *clientv3.Client
+	leaseId    clientv3.LeaseID
+	lease      clientv3.Lease
+	node       *ServiceNode
+	closeChan  chan error
+	timer      *time.Ticker
+	registered Registered
+	beenMaster BeenMaster
 }
 
-func NewRegister(node *ServiceNode, conf ClientConfig) (*Register, error) {
+func NewRegister(node *ServiceNode, conf ClientConfig, registered Registered, beenMaster BeenMaster) (*Register, error) {
 	log.Info("new register")
 	client, err := clientv3.New(clientv3.Config(conf))
 	if err != nil {
@@ -31,9 +33,11 @@ func NewRegister(node *ServiceNode, conf ClientConfig) (*Register, error) {
 	}
 
 	r := &Register{
-		client:    client,
-		closeChan: make(chan error),
-		node:      node,
+		client:     client,
+		closeChan:  make(chan error),
+		node:       node,
+		registered: registered,
+		beenMaster: beenMaster,
 	}
 
 	return r, nil
@@ -78,6 +82,12 @@ func (r *Register) register() error {
 
 	if r.node.RunMode == SrvcRunModeMasterSlave {
 		return r.registerMasterSlave()
+	}
+
+	if r.registered != nil {
+		if err := r.registered(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -146,6 +156,11 @@ func (r *Register) campaignMaster() error {
 		r.node.IsMaster = true
 		log.Debugf("node(%s) campaigned service(%s) master node!",
 			r.node.UniqueId, r.node.Name)
+		if r.beenMaster != nil {
+			if err = r.beenMaster(); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

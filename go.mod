@@ -107,13 +107,13 @@ require (
 )
 
 require (
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/tikv/client-go/v2 v2.0.0-rc
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20200824191128-ae9734ed278b
 )
 
 require (
 	github.com/coreos/go-semver v0.3.0 // indirect
-	github.com/robfig/cron/v3 v3.0.1
 	github.com/tikv/pd v1.1.0-beta.0.20211029083450-e65f0c55b6ae // indirect
 )
 

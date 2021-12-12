@@ -20,7 +20,6 @@ type Server struct {
 	ConfPath      string
 	StoreEndpoint []string
 	StorePoolSize int
-	cronSrvc      *servicev1.CronSrvc
 }
 
 func (svr Server) Run() error {
@@ -33,7 +32,6 @@ func (svr Server) Run() error {
 
 	route(app, srvc)
 	addr := svr.IpAddr + ":" + strconv.Itoa(int(svr.Port))
-
 	node := microservice.ServiceNode{
 		Addr:     "http://" + addr,
 		Name:     svr.Name,
@@ -41,22 +39,24 @@ func (svr Server) Run() error {
 		PickMode: microservice.SrvcPickModeMaster,
 		RunMode:  microservice.SrvcRunModeMasterSlave,
 	}
-
 	log.Debugf("%v", node)
-	msrvc, err := microservice.New(node, svr.ConfPath)
+	msrvc, err := microservice.New(node, svr.ConfPath,
+		func() error {
+			log.Info("service node registered")
+
+			return nil
+		},
+		func() error {
+			log.Info("service node had been master")
+
+			return srvc.LoadSchedules()
+		},
+	)
 	if err != nil {
 		return err
 	}
-
 	srvc.SetMicroService(msrvc)
-
-	msrvc.Run()
-
-	svr.cronSrvc = srvc.Cron()
-	if err = svr.cronSrvc.Load(); err != nil {
-		return err
-	}
-	svr.cronSrvc.Run()
+	srvc.Run()
 
 	return app.Listen(addr)
 }

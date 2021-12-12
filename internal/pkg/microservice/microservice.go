@@ -26,6 +26,11 @@ const (
 	SrvcPickModeMaster SrvcPickMode = "master"
 )
 
+type (
+	Registered func() error
+	BeenMaster func() error
+)
+
 type ClientConfig clientv3.Config
 
 type microService struct {
@@ -59,7 +64,7 @@ func (s *MicroServiceObject) GetMicroService() MicroService {
 	return s.microService
 }
 
-func New(node ServiceNode, clientConfigPath string) (*microService, error) {
+func New(node ServiceNode, clientConfigPath string, registered Registered, beenMaster BeenMaster) (*microService, error) {
 	log.Info("new micro service...")
 	conf, err := LoadClientConfig(clientConfigPath)
 	if err != nil {
@@ -73,7 +78,7 @@ func New(node ServiceNode, clientConfigPath string) (*microService, error) {
 		return nil, err
 	}
 
-	register, err := NewRegister(&node, *conf)
+	register, err := NewRegister(&node, *conf, registered, beenMaster)
 	if err != nil {
 		return nil, err
 	}
