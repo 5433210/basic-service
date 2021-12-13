@@ -43,8 +43,8 @@ func New(endpoint []string, size int) (Service, error) {
 }
 
 func (s *service) Run() {
-	s.GetMicroService().Run()
-	s.scheduler.Run()
+	s.GetMicroService().Start()
+	s.scheduler.Start()
 }
 
 func (s *service) Stop() {

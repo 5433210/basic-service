@@ -41,7 +41,7 @@ type microService struct {
 }
 
 type MicroService interface {
-	Run()
+	Start()
 	Stop()
 	// Pull() error
 	Pick(name string, value string) *ServiceNode
@@ -91,7 +91,7 @@ func New(node ServiceNode, clientConfigPath string, registered Registered, beenM
 	}, nil
 }
 
-func (ms *microService) Run() {
+func (ms *microService) Start() {
 	log.Info("run micro service...")
 	if ms.running {
 		return

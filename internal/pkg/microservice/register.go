@@ -145,7 +145,7 @@ func (r *Register) campaignMaster() error {
 		return err
 	}
 
-	log.Debugf("masterNodeId:%+v", masterNodeId)
+	// log.Debugf("masterNodeId:%+v", masterNodeId)
 
 	if masterNodeId == "" {
 		log.Debugf("no master node for service(%s) yet", r.node.Name)

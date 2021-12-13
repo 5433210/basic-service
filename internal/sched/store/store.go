@@ -48,7 +48,8 @@ func (t *Transaction) Put(k []byte, v []byte) error {
 
 func newPool(endpoint []string, size int) (pool *clientPool, err error) {
 	pool = &clientPool{
-		size: size,
+		clients: make([]*Client, size),
+		size:    size,
 	}
 	for i := 0; i < size; i++ {
 		pool.clients[i], err = pool.newClient(endpoint)

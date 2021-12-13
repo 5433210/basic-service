@@ -52,7 +52,7 @@ func (d *Discovery) pull() error {
 			continue
 		}
 		d.manager.AddNode(node)
-		log.Debugf("pull node:%+v", node)
+		// log.Debugf("pull node:%+v", node)
 	}
 
 	// resp, err = kv.Get(context.TODO(), constant.MasterPrifex+"/", clientv3.WithPrefix())

@@ -17,8 +17,8 @@ type ErrorResponse struct {
 // Execution defines model for Execution.
 type Execution struct {
 	FinishedAt *string `json:"finished_at,omitempty"`
-	Id         *string `json:"id,omitempty"`
-	JobId      *string `json:"job_id,omitempty"`
+	Id         string  `json:"id"`
+	JobId      string  `json:"job_id"`
 	Output     *string `json:"output,omitempty"`
 	ReturnCode *string `json:"return_code,omitempty"`
 	StartedAt  *string `json:"started_at,omitempty"`

@@ -58,5 +58,7 @@ func (svr Server) Run() error {
 	srvc.SetMicroService(msrvc)
 	srvc.Run()
 
+	log.Info("listen--------")
+
 	return app.Listen(addr)
 }

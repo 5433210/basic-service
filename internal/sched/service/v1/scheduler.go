@@ -2,7 +2,9 @@ package servicev1
 
 import (
 	"context"
+	"time"
 
+	"github.com/google/uuid"
 	cron "github.com/robfig/cron/v3"
 
 	"wailik.com/internal/pkg/log"
@@ -12,52 +14,70 @@ import (
 )
 
 type CronJob struct {
-	config   map[string]interface{}
-	data     interface{}
-	executor executors.Executor
-}
-
-func NewCronJob(executor executors.Executor, cofnig map[string]interface{}, data interface{}) *CronJob {
-	return &CronJob{
-		executor: executor,
-		config:   cofnig,
-		data:     data,
-	}
-}
-
-func (c *CronJob) Run() {
-	err := c.executor.Execute(c.config, c.data)
-	if err != nil {
-		log.Fatalf("job execute error:%+v", err)
-	}
-}
-
-type OnetimeJob struct {
 	scheduler *Scheduler
 	jobId     string
 	config    map[string]interface{}
 	data      interface{}
 	executor  executors.Executor
+	onetime   bool
 }
 
-func NewOnetimeJob(scheduler *Scheduler, jobId string, executor executors.Executor, cofnig map[string]interface{}, data interface{}) *OnetimeJob {
-	return &OnetimeJob{
+func NewCronJob(scheduler *Scheduler, jobId string, onetime bool, executor executors.Executor, cofnig map[string]interface{}, data interface{}) *CronJob {
+	return &CronJob{
 		scheduler: scheduler,
 		jobId:     jobId,
 		executor:  executor,
 		config:    cofnig,
 		data:      data,
+		onetime:   onetime,
 	}
 }
 
-func (c *OnetimeJob) Run() {
-	err := c.executor.Execute(c.config, c.data)
+func (c *CronJob) Run() {
+	startAt := new(string)
+	finishAt := new(string)
+	id := uuid.NewString()
+	err := c.executor.Execute(c.config, c.data, func() {
+		*startAt = time.Now().String()
+		err := c.scheduler.createExecutionInStore(apiv1.Execution{
+			JobId:      c.jobId,
+			Id:         id,
+			ReturnCode: nil,
+			Output:     nil,
+			StartedAt:  startAt,
+			FinishedAt: nil,
+		})
+		if err != nil {
+			log.Fatalf("createExecution err:%+v", err)
+		}
+	}, func(retcd, output string, ts time.Time) {
+		*finishAt = ts.String()
+		err := c.scheduler.updateExecutionInStore(apiv1.Execution{
+			JobId:      c.jobId,
+			Id:         id,
+			ReturnCode: &retcd,
+			Output:     &output,
+			StartedAt:  startAt,
+			FinishedAt: finishAt,
+		})
+		if err != nil {
+			log.Fatalf("updateExecution err:%+v", err)
+		}
+	})
 	if err != nil {
 		log.Fatalf("job execute error:%+v", err)
 	}
-	err = c.scheduler.Remove(c.jobId)
-	if err != nil {
-		log.Fatalf("job remove error:%+v", err)
+
+	if c.onetime {
+		err = c.scheduler.Remove(c.jobId)
+		if err != nil {
+			log.Fatalf("job remove error:%+v", err)
+		}
+
+		err = c.scheduler.removeJobInStore(c.jobId)
+		if err != nil {
+			log.Fatalf("job remove error:%+v", err)
+		}
 	}
 }
 
@@ -77,34 +97,39 @@ func NewScheduler(store *store.Store) *Scheduler {
 	return srvc
 }
 
+func (c *Scheduler) Has(jobId string) bool {
+	return c.ids[jobId] > 0
+}
+
 func (c *Scheduler) Load() error {
+	log.Debug("scheduler loading...")
 	client := c.store.Obtain()
 	txn, err := client.Txn(true)
 	if err != nil {
 		return err
 	}
-	jobStore := &store.JobStore{}
 
+	jobStore := &store.JobStore{}
 	jobs, err := jobStore.RetrieveAll(txn)
 	if err != nil {
 		_ = txn.Rollback()
 
 		return err
 	}
-
 	_ = txn.Commit(context.Background())
-
 	for _, job := range *jobs {
+		log.Debugf("load job(%+v)...", job.Id)
 		if err = c.Add(job); err != nil {
 			return err
 		}
 	}
+	log.Debug("scheduler loaded")
 
 	return nil
 }
 
-func (c *Scheduler) Run() {
-	c.cron.Run()
+func (c *Scheduler) Start() {
+	c.cron.Start()
 }
 
 func (c *Scheduler) Add(job apiv1.Job) error {
@@ -117,30 +142,33 @@ func (c *Scheduler) Add(job apiv1.Job) error {
 		return nil
 	}
 
+	if c.Has(job.Id) {
+		err = c.Remove(job.Id) // remove first
+		if err != nil {
+			return err
+		}
+	}
+
 	schedule := job.Schedule
 	// timezone := job.Timezone
 	executor := job.Executor
-	e := executors.Get(executor.Name)
-	if e == nil {
+	executorInstance := executors.Get(executor.Name)
+	if executorInstance == nil {
 		return nil
 	}
-	if job.Onetime {
-		id, err = c.cron.AddJob(schedule, NewOnetimeJob(c, job.Id, e, executor.Config, job.Data))
-		if err != nil {
-			return err
-		}
-	} else {
-		id, err = c.cron.AddJob(schedule, NewCronJob(e, executor.Config, job.Data))
-		if err != nil {
-			return err
-		}
+
+	id, err = c.cron.AddJob(schedule, NewCronJob(c, job.Id, job.Onetime, executorInstance, executor.Config, job.Data))
+	if err != nil {
+		return err
 	}
+
 	c.ids[job.Id] = id
 
 	return nil
 }
 
 func (c *Scheduler) Remove(jobId string) error {
+	log.Debug("remove job")
 	id := c.ids[jobId]
 	c.cron.Remove(id)
 
@@ -149,4 +177,61 @@ func (c *Scheduler) Remove(jobId string) error {
 
 func (c *Scheduler) Stop() context.Context {
 	return c.cron.Stop()
+}
+
+func (c *Scheduler) createExecutionInStore(execution apiv1.Execution) error {
+	client := c.store.Obtain()
+	txn, err := client.Txn(true)
+	if err != nil {
+		return err
+	}
+
+	executionStore := &store.ExecutionStore{}
+	err = executionStore.Create(txn, execution)
+	if err != nil {
+		_ = txn.Rollback()
+
+		return err
+	}
+	_ = txn.Commit(context.Background())
+
+	return nil
+}
+
+func (c *Scheduler) updateExecutionInStore(execution apiv1.Execution) error {
+	client := c.store.Obtain()
+	txn, err := client.Txn(true)
+	if err != nil {
+		return err
+	}
+
+	executionStore := &store.ExecutionStore{}
+	err = executionStore.Update(txn, execution)
+	if err != nil {
+		_ = txn.Rollback()
+
+		return err
+	}
+	_ = txn.Commit(context.Background())
+
+	return nil
+}
+
+func (c *Scheduler) removeJobInStore(jobId string) error {
+	client := c.store.Obtain()
+	txn, err := client.Txn(true)
+	if err != nil {
+		return err
+	}
+
+	jobStore := &store.JobStore{}
+	err = jobStore.Delete(txn, jobId)
+	if err != nil {
+		_ = txn.Rollback()
+
+		return err
+	}
+	_ = txn.Commit(context.Background())
+
+	return nil
 }

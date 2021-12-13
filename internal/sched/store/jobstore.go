@@ -1,9 +1,11 @@
 package store
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 
+	"wailik.com/internal/pkg/log"
 	apiv1 "wailik.com/internal/sched/api/v1"
 )
 
@@ -55,17 +57,28 @@ func (j *JobStore) Delete(txn *Transaction, jobId string) error {
 }
 
 func (j *JobStore) RetrieveAll(txn *Transaction) (*[]apiv1.Job, error) {
+	startKey := []byte("job:")
 	jobs := make([]apiv1.Job, 0)
-	it, err := txn.txn.Iter([]byte("job:"), nil)
+	it, err := txn.txn.Iter(startKey, nil)
 	if err != nil {
 		return nil, err
 	}
+	defer it.Close()
+
 	for it.Valid() {
+		if !bytes.HasPrefix(it.Key(), startKey) {
+			break
+		}
+
 		job := &apiv1.Job{}
 		if err = json.Unmarshal(it.Value(), job); err != nil {
-			it.Close()
-			jobs = append(jobs, *job)
+			log.Debugf("%+v", string(it.Value()))
 
+			return nil, err
+		}
+		jobs = append(jobs, *job)
+
+		if err = it.Next(); err != nil {
 			return nil, err
 		}
 	}
@@ -74,17 +87,23 @@ func (j *JobStore) RetrieveAll(txn *Transaction) (*[]apiv1.Job, error) {
 }
 
 func (j *JobStore) RetrieveExecutions(txn *Transaction, jobId string) (*[]apiv1.Execution, error) {
+	startKey := []byte("execution:" + jobId + ":")
 	executions := make([]apiv1.Execution, 0)
-	it, err := txn.txn.Iter([]byte("execution:"+jobId+":"), nil)
+	it, err := txn.txn.Iter(startKey, nil)
 	if err != nil {
 		return nil, err
 	}
+	defer it.Close()
 	for it.Valid() {
+		if !bytes.HasPrefix(it.Key(), startKey) {
+			break
+		}
 		execution := &apiv1.Execution{}
 		if err = json.Unmarshal(it.Value(), execution); err != nil {
-			it.Close()
-			executions = append(executions, *execution)
-
+			return nil, err
+		}
+		executions = append(executions, *execution)
+		if err = it.Next(); err != nil {
 			return nil, err
 		}
 	}
