@@ -80,7 +80,6 @@ require (
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/google/btree v1.0.0 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/labstack/gommon v0.3.0 // indirect
@@ -114,6 +113,7 @@ require (
 
 require (
 	github.com/coreos/go-semver v0.3.0 // indirect
+	github.com/eclipse/paho.golang v0.10.0
 	github.com/tikv/pd v1.1.0-beta.0.20211029083450-e65f0c55b6ae // indirect
 )
 

@@ -42,7 +42,7 @@ func (c *CronJob) Run() {
 		err := c.scheduler.createExecutionInStore(apiv1.Execution{
 			JobId:      c.jobId,
 			Id:         id,
-			ReturnCode: nil,
+			Success:    nil,
 			Output:     nil,
 			StartedAt:  startAt,
 			FinishedAt: nil,
@@ -50,12 +50,12 @@ func (c *CronJob) Run() {
 		if err != nil {
 			log.Fatalf("createExecution err:%+v", err)
 		}
-	}, func(retcd, output string, ts time.Time) {
+	}, func(success bool, output string, ts time.Time) {
 		*finishAt = ts.String()
 		err := c.scheduler.updateExecutionInStore(apiv1.Execution{
 			JobId:      c.jobId,
 			Id:         id,
-			ReturnCode: &retcd,
+			Success:    &success,
 			Output:     &output,
 			StartedAt:  startAt,
 			FinishedAt: finishAt,

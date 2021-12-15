@@ -4,7 +4,7 @@ import "time"
 
 type Start func()
 
-type Finish func(retcd string, output string, ts time.Time)
+type Finish func(success bool, output string, ts time.Time)
 
 type Executor interface {
 	Execute(config map[string]interface{}, data interface{}, start Start, finish Finish) error

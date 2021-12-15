@@ -20,8 +20,8 @@ type Execution struct {
 	Id         string  `json:"id"`
 	JobId      string  `json:"job_id"`
 	Output     *string `json:"output,omitempty"`
-	ReturnCode *string `json:"return_code,omitempty"`
 	StartedAt  *string `json:"started_at,omitempty"`
+	Success    *bool   `json:"success,omitempty"`
 }
 
 // Executor defines model for Executor.

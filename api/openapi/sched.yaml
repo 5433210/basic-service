@@ -202,8 +202,8 @@ components:
           type: string
         job_id:
           type: string
-        return_code:
-          type: string
+        success:
+          type: boolean
         output:
           type: string
         started_at:
