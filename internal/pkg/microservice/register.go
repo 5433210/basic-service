@@ -107,20 +107,20 @@ func (r *Register) registerMasterSlave() error {
 	if err := r.grant(); err != nil {
 		return err
 	}
-	if err := r.campaignMaster(); err != nil {
+	if _, err := r.campaignMaster(); err != nil {
 		return err
 	}
 
 	return r.saveNode()
 }
 
-func (r *Register) campaignMaster() error {
+func (r *Register) campaignMaster() (bool, error) {
 	session, err := concurrency.NewSession(r.client,
 		concurrency.WithTTL(_ttl))
 	if err != nil {
 		log.Fatalf("create session error:%+v", err)
 
-		return err
+		return false, err
 	}
 
 	defer session.Close()
@@ -130,7 +130,7 @@ func (r *Register) campaignMaster() error {
 	if err = mutex.Lock(context.TODO()); err != nil {
 		log.Fatalf("lock mutex error:%+v", err)
 
-		return err
+		return false, err
 	}
 
 	defer func() {
@@ -142,7 +142,7 @@ func (r *Register) campaignMaster() error {
 
 	masterNodeId, err := r.getValue(masterNodeKey)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// log.Debugf("masterNodeId:%+v", masterNodeId)
@@ -151,19 +151,21 @@ func (r *Register) campaignMaster() error {
 		log.Debugf("no master node for service(%s) yet", r.node.Name)
 		err = r.setValue(masterNodeKey, r.node.UniqueId)
 		if err != nil {
-			return err
+			return false, err
 		}
 		r.node.IsMaster = true
 		log.Debugf("node(%s) campaigned service(%s) master node!",
 			r.node.UniqueId, r.node.Name)
 		if r.beenMaster != nil {
 			if err = r.beenMaster(); err != nil {
-				return err
+				return false, err
 			}
 		}
+
+		return true, nil
 	}
 
-	return nil
+	return false, nil
 }
 
 func (r *Register) saveNode() error {
@@ -190,8 +192,8 @@ func (r *Register) grant() error {
 	return nil
 }
 
-func (r *Register) keepalive() error {
-	_, err := r.lease.KeepAliveOnce(context.TODO(), r.leaseId)
+func (r *Register) keepalive() (err error) {
+	_, err = r.lease.KeepAliveOnce(context.TODO(), r.leaseId)
 	if err != nil {
 		if errors.Is(err, rpctypes.ErrLeaseNotFound) {
 			log.Infof("lease(%s) not found, register again", r.leaseId)
@@ -204,8 +206,15 @@ func (r *Register) keepalive() error {
 	}
 
 	if r.node.RunMode == SrvcRunModeMasterSlave {
-		if err = r.campaignMaster(); err != nil {
+		var success bool
+		success, err = r.campaignMaster()
+		if err != nil {
 			return err
+		}
+		if success {
+			if err = r.saveNode(); err != nil {
+				return err
+			}
 		}
 	}
 

@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-	// mqtt_client --server 127.0.0.1:1883 --topic server --data {"data":"no data"}
 	stdout := log.New(log.OptOutputPaths([]string{"stdout"}))
 	defer stdout.Flush()
 	stderr := log.New(log.OptErrorOutputPaths([]string{"stderr"}))
@@ -79,5 +78,5 @@ func main() {
 
 	c.Conn.Close()
 
-	stdout.Info("sent message successfully")
+	stdout.Infof("sent message successfully:%+v", *data)
 }
