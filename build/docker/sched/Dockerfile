@@ -5,11 +5,10 @@ WORKDIR /opt/sched
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
       echo "Asia/Shanghai" > /etc/timezone
 
-COPY sched /opt/sched/bin/
-# COPY data/* /opt/sched/data/
+COPY sched /opt/sched/
+COPY sched.yaml /opt/sched/
 
-EXPOSE 9001
+EXPOSE 3005
 
-ENTRYPOINT ["/opt/sched/bin/sched"]
-CMD ["-v", "/opt/sched/db:/opt/sched/db /opt/sched/log:/opt/sched/log"]
+ENTRYPOINT ["/opt/sched/sched"]
 

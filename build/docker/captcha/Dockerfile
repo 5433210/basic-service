@@ -5,11 +5,10 @@ WORKDIR /opt/captcha
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
       echo "Asia/Shanghai" > /etc/timezone
 
-COPY captcha /opt/captcha/bin/
-# COPY data/* /opt/captcha/data/
+COPY captcha /opt/captcha/
+COPY captcha.yaml /opt/captcha/
 
-EXPOSE 9001
+EXPOSE 3003
 
-ENTRYPOINT ["/opt/captcha/bin/captcha"]
-CMD ["-v", "/opt/captcha/db:/opt/captcha/db /opt/captcha/log:/opt/captcha/log"]
+ENTRYPOINT ["/opt/captcha/captcha"]
 

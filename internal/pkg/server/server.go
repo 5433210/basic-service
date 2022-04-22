@@ -42,13 +42,9 @@ func (s *Server) GetMicroServiceConfig() microservice.MicroServiceConfig {
 	return s.MicroServiceConfig
 }
 
-func (s *Server) SetMicroService(ms microservice.MicroService) {
+func (s *Server) SetMicroService(ms microservice.MicroService) {}
 
-}
-
-func (s *Server) Bind(*fiber.App) {
-
-}
+func (s *Server) Bind(*fiber.App) {}
 
 func LoadConfig[T any](serviceName string, configPaths []string, config *T) (*T, error) {
 	log.Info("new Server...")
@@ -61,8 +57,8 @@ func LoadConfig[T any](serviceName string, configPaths []string, config *T) (*T,
 	if err != nil {
 		return nil, err
 	}
-	log.Info(viper.GetString("name"))
-	log.Info(viper.GetString("port"))
+	log.Info(viper.GetString("Server.Name"))
+	log.Info(viper.GetString("Server.Port"))
 	err = viper.Unmarshal(config)
 	if err != nil {
 		return nil, err
@@ -75,7 +71,18 @@ func Run[T IServer](server T) error {
 	app := fiber.New()
 	server.Bind(app)
 	addr := server.GetIpAddr() + ":" + strconv.Itoa(server.GetPort())
+	if err := app.Listen(addr); err != nil {
+		return err
+	}
 
+	if !server.GetMicroServiceConfig().Disabled {
+		return startMicroService(server, addr)
+	}
+
+	return nil
+}
+
+func startMicroService[T IServer](server T, addr string) error {
 	node := microservice.ServiceNode{
 		Addr:     "http://" + addr,
 		Name:     server.GetName(),
@@ -91,5 +98,5 @@ func Run[T IServer](server T) error {
 
 	server.SetMicroService(msrvc)
 	msrvc.Start()
-	return app.Listen(addr)
+	return nil
 }

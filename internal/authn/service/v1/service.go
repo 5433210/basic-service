@@ -27,7 +27,7 @@ func (s *service) Identifier() *identifierSrvc { return newIdentifierSrvc(s) }
 func (s *service) Credential() *credentialSrvc { return newCredentialSrvc(s) }
 
 func New(dsn string) (Service, error) {
-	log.Info("new service...")
+	log.Infof("new service...%s", dsn)
 
 	store, err := storev1.New(&storev1.Options{DSN: dsn})
 	if err != nil {

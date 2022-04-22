@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-mkdir -p "$DST_DIR/data"
-
-cp -rv data "$DST_DIR/data/"
+cp -rv authz.yaml "$DST_DIR"
+cp -rv authz.data.json "$DST_DIR"
+cp -rv authz.rego "$DST_DIR"
 

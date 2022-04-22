@@ -12,14 +12,12 @@ type CourierServer struct {
 	service servicev1.Service
 }
 
-func New() (*CourierServer, error) {
+func CreateService(s *CourierServer) (*CourierServer, error) {
 	service, err := servicev1.New()
 	if err != nil {
 		return nil, err
 	}
-	var s = &CourierServer{
-		service: service,
-	}
+	s.service = service
 	return s, nil
 }
 

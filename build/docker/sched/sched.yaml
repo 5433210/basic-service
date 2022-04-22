@@ -1,0 +1,13 @@
+Server:
+  Name: sched
+  Port: 3005
+  IpAddr: 127.0.0.1
+  MicroServiceConfig:
+    Disabled: true
+    Endpoints:
+      - "http://127.0.0.1:2379"
+      - "http://127.0.0.1:22379"
+      - "http://127.0.0.1:32379"
+StoreEndpoint:
+  - "http://127.0.0.1:2379"
+StorePoolSize: 1

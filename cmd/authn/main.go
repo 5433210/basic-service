@@ -13,8 +13,8 @@ func main() {
 
 	log.Init(log.OptLevel(log.DebugLevel))
 
-	svr := &authn.AuthzServer{}
-	svr, err := server.LoadConfig(constant.ServiceNameAuthz, []string{"."}, svr)
+	svr := &authn.AuthnServer{}
+	svr, err := server.LoadConfig(constant.ServiceNameAuthn, []string{"."}, svr)
 	if err != nil {
 		log.ErrorLog(errors.NewError(err))
 		return

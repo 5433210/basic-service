@@ -13,19 +13,18 @@ func main() {
 
 	log.Init(log.OptLevel(log.DebugLevel))
 
-	svr, err := courier.New()
+	svr := &courier.CourierServer{}
+	svr, err := server.LoadConfig(constant.ServiceNameCourier, []string{"."}, svr)
 	if err != nil {
 		log.ErrorLog(errors.NewError(err))
 		return
 	}
 
-	svr, err = server.LoadConfig(constant.ServiceNameCourier, []string{"."}, svr)
+	svr, err = courier.CreateService(svr)
 	if err != nil {
 		log.ErrorLog(errors.NewError(err))
 		return
 	}
-
-	log.Infof("server conf:%+v", svr)
 
 	err = server.Run(svr)
 	if err != nil {

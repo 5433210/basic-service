@@ -7,14 +7,14 @@ import (
 	"wailik.com/internal/pkg/server"
 )
 
-type AuthzServer struct {
+type AuthnServer struct {
 	server.Server
-	service servicev1.Service
-	Dsn     string
+	service    servicev1.Service
+	DataSource string
 }
 
-func CreateService(s *AuthzServer) (*AuthzServer, error) {
-	service, err := servicev1.New(s.Dsn)
+func CreateService(s *AuthnServer) (*AuthnServer, error) {
+	service, err := servicev1.New(s.DataSource)
 	if err != nil {
 		return nil, err
 	}
@@ -22,10 +22,10 @@ func CreateService(s *AuthzServer) (*AuthzServer, error) {
 	return s, nil
 }
 
-func (s *AuthzServer) SetMicroService(ms microservice.MicroService) {
+func (s *AuthnServer) SetMicroService(ms microservice.MicroService) {
 	s.service.SetMicroService(ms)
 }
 
-func (s *AuthzServer) Bind(app *fiber.App) {
+func (s *AuthnServer) Bind(app *fiber.App) {
 	route(app, s.service)
 }

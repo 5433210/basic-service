@@ -32,6 +32,7 @@ type (
 )
 
 type MicroServiceConfig struct {
+	Disabled  bool
 	Endpoints []string
 }
 

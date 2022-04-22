@@ -7,14 +7,12 @@ import (
 	"wailik.com/internal/pkg/server"
 )
 
-type SchedServer struct {
+type CaptchaServer struct {
 	server.Server
-	service       servicev1.Service
-	StoreEndpoint []string
-	StorePoolSize int
+	service servicev1.Service
 }
 
-func CreateService(s *SchedServer) (*SchedServer, error) {
+func CreateService(s *CaptchaServer) (*CaptchaServer, error) {
 	service, err := servicev1.New()
 	if err != nil {
 		return nil, err
@@ -23,10 +21,10 @@ func CreateService(s *SchedServer) (*SchedServer, error) {
 	return s, nil
 }
 
-func (s *SchedServer) SetMicroService(ms microservice.MicroService) {
+func (s *CaptchaServer) SetMicroService(ms microservice.MicroService) {
 	s.service.SetMicroService(ms)
 }
 
-func (s *SchedServer) Bind(app *fiber.App) {
+func (s *CaptchaServer) Bind(app *fiber.App) {
 	route(app, s.service)
 }

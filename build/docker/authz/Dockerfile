@@ -5,11 +5,11 @@ WORKDIR /opt/authz
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
       echo "Asia/Shanghai" > /etc/timezone
 
-COPY authz /opt/authz/bin/
-# COPY data/* /opt/authz/data/
+COPY authz /opt/authz/
+COPY authz.yaml /opt/authz/
+COPY authz.rego /opt/authz/
 
-EXPOSE 9001
+EXPOSE 3002
 
-ENTRYPOINT ["/opt/authz/bin/authz"]
-CMD ["-v", "/opt/authz/db:/opt/authz/db /opt/authz/log:/opt/authz/log"]
+ENTRYPOINT ["/opt/authz/authz"]
 

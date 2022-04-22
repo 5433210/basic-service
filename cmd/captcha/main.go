@@ -13,8 +13,8 @@ func main() {
 
 	log.Init(log.OptLevel(log.DebugLevel))
 
-	svr := &captcha.SchedServer{}
-	svr, err := server.LoadConfig(constant.ServiceNameSched, []string{"."}, svr)
+	svr := &captcha.CaptchaServer{}
+	svr, err := server.LoadConfig(constant.ServiceNameCaptcha, []string{"."}, svr)
 	if err != nil {
 		log.ErrorLog(errors.NewError(err))
 		return
