@@ -2,8 +2,10 @@ package main
 
 import (
 	"wailik.com/internal/captcha"
+	"wailik.com/internal/pkg/constant"
 	"wailik.com/internal/pkg/errors"
 	"wailik.com/internal/pkg/log"
+	"wailik.com/internal/pkg/server"
 )
 
 func main() {
@@ -11,13 +13,22 @@ func main() {
 
 	log.Init(log.OptLevel(log.DebugLevel))
 
-	svr := captcha.Server{
-		Port:    3000,
-		IpAddr:  "127.0.0.1",
-		LogPath: "./",
+	svr := &captcha.SchedServer{}
+	svr, err := server.LoadConfig(constant.ServiceNameSched, []string{"."}, svr)
+	if err != nil {
+		log.ErrorLog(errors.NewError(err))
+		return
 	}
 
-	if err := svr.Run(); err != nil {
+	svr, err = captcha.CreateService(svr)
+	if err != nil {
 		log.ErrorLog(errors.NewError(err))
+		return
+	}
+
+	err = server.Run(svr)
+	if err != nil {
+		log.ErrorLog(errors.NewError(err))
+		return
 	}
 }

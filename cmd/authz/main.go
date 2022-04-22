@@ -1,15 +1,11 @@
 package main
 
 import (
-	authz "wailik.com/internal/authz"
+	"wailik.com/internal/authz"
+	"wailik.com/internal/pkg/constant"
 	"wailik.com/internal/pkg/errors"
 	"wailik.com/internal/pkg/log"
-)
-
-var (
-	regoPath = "/Users/zhangweili/Desktop/rbac/data/rbac.rego"
-	dataPath = "/Users/zhangweili/Desktop/rbac/data/data.json"
-	dbPath   = "/Users/zhangweili/Desktop/rbac/data/db"
+	"wailik.com/internal/pkg/server"
 )
 
 func main() {
@@ -17,16 +13,22 @@ func main() {
 
 	log.Init(log.OptLevel(log.DebugLevel))
 
-	svr := authz.Server{
-		Port:     9001,
-		IpAddr:   "0.0.0.0",
-		RegoPath: regoPath,
-		DataPath: dataPath,
-		DBPath:   dbPath,
-		LogPath:  "",
+	svr := &authz.AuthzServer{}
+	svr, err := server.LoadConfig(constant.ServiceNameAuthz, []string{"."}, svr)
+	if err != nil {
+		log.ErrorLog(errors.NewError(err))
+		return
 	}
 
-	if err := svr.Run(); err != nil {
+	svr, err = authz.CreateService(svr)
+	if err != nil {
 		log.ErrorLog(errors.NewError(err))
+		return
+	}
+
+	err = server.Run(svr)
+	if err != nil {
+		log.ErrorLog(errors.NewError(err))
+		return
 	}
 }

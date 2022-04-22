@@ -11,11 +11,13 @@ import (
 	"wailik.com/internal/pkg/constant"
 	"wailik.com/internal/pkg/errors"
 	"wailik.com/internal/pkg/log"
+	"wailik.com/internal/pkg/microservice"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type Service interface {
+	microservice.MicroServiceHelper
 	Domain() *domainSrvc
 	Permission() *permissionSrvc
 	Group() *groupSrvc
@@ -28,6 +30,7 @@ type Service interface {
 }
 
 type service struct {
+	microservice.MicroServiceObject
 	ldb leveldb.LeveldbStore
 	odb opa.OpaStore
 }
@@ -66,7 +69,7 @@ func (s *service) Role() *roleSrvc             { return newRoleSrvc(s) }
 func (s *service) Deny() *denySrvc             { return newDenySrvc(s) }
 func (s *service) Subject() *subjectSrvc       { return newSubjectSrvc(s) }
 
-func NewService(dbPath string, regoPath string, dataPath string) (Service, error) {
+func New(dbPath string, regoPath string, dataPath string) (Service, error) {
 	log.Info("new service...")
 	log.Infof("db path:%v", dbPath)
 	log.Infof("rego path:%v", regoPath)

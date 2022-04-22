@@ -49,7 +49,7 @@ func TestNewService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewService(tt.args.dbPath, tt.args.regoPath, tt.args.dataPath)
+			got, err := New(tt.args.dbPath, tt.args.regoPath, tt.args.dataPath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewService() error = %v, wantErr %v", err, tt.wantErr)
 				return

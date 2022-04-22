@@ -1,42 +1,33 @@
-package server
+package authz
 
 import (
-	"strconv"
-
-	"github.com/gofiber/fiber/v2"
-
+	fiber "github.com/gofiber/fiber/v2"
 	servicev1 "wailik.com/internal/authz/service/v1"
-	"wailik.com/internal/pkg/log"
+	"wailik.com/internal/pkg/microservice"
+	"wailik.com/internal/pkg/server"
 )
 
-type Server struct {
-	IpAddr   string
-	Port     uint16
+type AuthzServer struct {
+	server.Server
+	service  servicev1.Service
 	RegoPath string
 	DataPath string
 	DBPath   string
-	LogPath  string
 }
 
-func (svr Server) Run() error {
-	app := fiber.New()
-	srvc, err := servicev1.NewService(svr.DBPath, svr.RegoPath, svr.DataPath)
+func CreateService(s *AuthzServer) (*AuthzServer, error) {
+	service, err := servicev1.New(s.DBPath, s.RegoPath, s.DataPath)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+	s.service = service
+	return s, nil
+}
 
-	if err = srvc.LoadData(); err != nil {
-		panic(err)
-	}
+func (s *AuthzServer) SetMicroService(ms microservice.MicroService) {
+	s.service.SetMicroService(ms)
+}
 
-	c, err := srvc.Dump("/")
-	if err != nil {
-		panic(err)
-	}
-	log.Info("\n" + string(c))
-
-	route(app, srvc)
-	addr := svr.IpAddr + ":" + strconv.Itoa(int(svr.Port))
-
-	return app.Listen(addr)
+func (s *AuthzServer) Bind(app *fiber.App) {
+	route(app, s.service)
 }

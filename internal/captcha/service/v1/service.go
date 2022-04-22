@@ -3,13 +3,16 @@ package servicev1
 import (
 	"wailik.com/internal/pkg/cache"
 	"wailik.com/internal/pkg/log"
+	"wailik.com/internal/pkg/microservice"
 )
 
 type Service interface {
+	microservice.MicroServiceHelper
 	Captcha() *captchaSrvc
 }
 
 type service struct {
+	microservice.MicroServiceObject
 	cache cache.Cache
 }
 

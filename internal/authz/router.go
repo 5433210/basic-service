@@ -1,4 +1,4 @@
-package server
+package authz
 
 import (
 	"github.com/gofiber/fiber/v2"

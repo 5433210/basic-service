@@ -1,53 +1,31 @@
 package authn
 
 import (
-	"strconv"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/rs/xid"
-
+	fiber "github.com/gofiber/fiber/v2"
 	servicev1 "wailik.com/internal/authn/service/v1"
-	"wailik.com/internal/pkg/constant"
-	"wailik.com/internal/pkg/log"
 	"wailik.com/internal/pkg/microservice"
+	"wailik.com/internal/pkg/server"
 )
 
-type Server struct {
-	Name     string
-	Port     uint16
-	IpAddr   string
-	DSN      string
-	ConfPath string
-	LogPath  string
+type AuthzServer struct {
+	server.Server
+	service servicev1.Service
+	Dsn     string
 }
 
-func (svr Server) Run() error {
-	app := fiber.New()
-	srvc, err := servicev1.New(svr.DSN)
+func CreateService(s *AuthzServer) (*AuthzServer, error) {
+	service, err := servicev1.New(s.Dsn)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+	s.service = service
+	return s, nil
+}
 
-	route(app, srvc)
-	addr := svr.IpAddr + ":" + strconv.Itoa(int(svr.Port))
+func (s *AuthzServer) SetMicroService(ms microservice.MicroService) {
+	s.service.SetMicroService(ms)
+}
 
-	node := microservice.ServiceNode{
-		Addr:     "http://" + addr,
-		Name:     svr.Name,
-		UniqueId: constant.DiscoveryPrifex + "/" + constant.ServiceNameAuthn + "/" + xid.New().String(),
-		RunMode:  microservice.SrvcRunModeFair,
-		PickMode: microservice.SrvcPickModeHash,
-	}
-	msrvc, err := microservice.New(node, svr.ConfPath, nil, nil)
-	if err != nil {
-		log.Debugf("new micro service error")
-
-		return err
-	}
-
-	srvc.SetMicroService(msrvc)
-
-	msrvc.Start()
-
-	return app.Listen(addr)
+func (s *AuthzServer) Bind(app *fiber.App) {
+	route(app, s.service)
 }

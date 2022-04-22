@@ -1,11 +1,10 @@
 package main
 
 import (
-	"os"
-	"strconv"
-
+	"wailik.com/internal/pkg/constant"
 	"wailik.com/internal/pkg/errors"
 	"wailik.com/internal/pkg/log"
+	"wailik.com/internal/pkg/server"
 	"wailik.com/internal/sched"
 )
 
@@ -14,19 +13,22 @@ func main() {
 
 	log.Init(log.OptLevel(log.DebugLevel))
 
-	port, _ := strconv.Atoi(os.Args[1])
-
-	svr := sched.Server{
-		Port:          uint16(port),
-		IpAddr:        "127.0.0.1",
-		LogPath:       "./",
-		Name:          "sched",
-		ConfPath:      "/Users/zhangweili/Desktop/basic-service/configs/sched.yaml",
-		StoreEndpoint: []string{"127.0.0.1:2379"},
-		StorePoolSize: 10,
+	svr := &sched.SchedServer{}
+	svr, err := server.LoadConfig(constant.ServiceNameSched, []string{"."}, svr)
+	if err != nil {
+		log.ErrorLog(errors.NewError(err))
+		return
 	}
 
-	if err := svr.Run(); err != nil {
+	svr, err = sched.CreateService(svr)
+	if err != nil {
 		log.ErrorLog(errors.NewError(err))
+		return
+	}
+
+	err = server.Run(svr)
+	if err != nil {
+		log.ErrorLog(errors.NewError(err))
+		return
 	}
 }

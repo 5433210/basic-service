@@ -11,7 +11,7 @@ import (
 
 func Test_Deny(t *testing.T) {
 	log.Init(log.OptLevel(log.DebugLevel))
-	s, _ := NewService(dbPath, regoPath, dataPath)
+	s, _ := New(dbPath, regoPath, dataPath)
 	defer s.Release()
 	t.Run("", func(t *testing.T) {
 		domain := apiv1.Domain{Id: "mydomain", Name: "我的域：wailik.com"}

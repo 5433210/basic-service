@@ -1,28 +1,32 @@
 package captcha
 
 import (
-	"strconv"
-
-	"github.com/gofiber/fiber/v2"
-
+	fiber "github.com/gofiber/fiber/v2"
 	servicev1 "wailik.com/internal/captcha/service/v1"
+	"wailik.com/internal/pkg/microservice"
+	"wailik.com/internal/pkg/server"
 )
 
-type Server struct {
-	Port    uint16
-	IpAddr  string
-	LogPath string
+type SchedServer struct {
+	server.Server
+	service       servicev1.Service
+	StoreEndpoint []string
+	StorePoolSize int
 }
 
-func (svr Server) Run() error {
-	app := fiber.New()
-	srvc, err := servicev1.New()
+func CreateService(s *SchedServer) (*SchedServer, error) {
+	service, err := servicev1.New()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+	s.service = service
+	return s, nil
+}
 
-	route(app, srvc)
-	addr := svr.IpAddr + ":" + strconv.Itoa(int(svr.Port))
+func (s *SchedServer) SetMicroService(ms microservice.MicroService) {
+	s.service.SetMicroService(ms)
+}
 
-	return app.Listen(addr)
+func (s *SchedServer) Bind(app *fiber.App) {
+	route(app, s.service)
 }

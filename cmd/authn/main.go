@@ -5,6 +5,7 @@ import (
 	"wailik.com/internal/pkg/constant"
 	"wailik.com/internal/pkg/errors"
 	"wailik.com/internal/pkg/log"
+	"wailik.com/internal/pkg/server"
 )
 
 func main() {
@@ -12,16 +13,22 @@ func main() {
 
 	log.Init(log.OptLevel(log.DebugLevel))
 
-	svr := authn.Server{
-		Name:     constant.ServiceNameAuthn,
-		Port:     3001,
-		IpAddr:   "127.0.0.1",
-		DSN:      "root:rootroot@tcp(127.0.0.1:3306)/authn?parseTime=true",
-		LogPath:  "./",
-		ConfPath: "/Users/zhangweili/Desktop/rbac/configs/authn.yaml",
+	svr := &authn.AuthzServer{}
+	svr, err := server.LoadConfig(constant.ServiceNameAuthz, []string{"."}, svr)
+	if err != nil {
+		log.ErrorLog(errors.NewError(err))
+		return
 	}
 
-	if err := svr.Run(); err != nil {
+	svr, err = authn.CreateService(svr)
+	if err != nil {
 		log.ErrorLog(errors.NewError(err))
+		return
+	}
+
+	err = server.Run(svr)
+	if err != nil {
+		log.ErrorLog(errors.NewError(err))
+		return
 	}
 }

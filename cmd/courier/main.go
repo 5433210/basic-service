@@ -5,6 +5,7 @@ import (
 	"wailik.com/internal/pkg/constant"
 	"wailik.com/internal/pkg/errors"
 	"wailik.com/internal/pkg/log"
+	"wailik.com/internal/pkg/server"
 )
 
 func main() {
@@ -12,15 +13,23 @@ func main() {
 
 	log.Init(log.OptLevel(log.DebugLevel))
 
-	svr := courier.Server{
-		Name:     constant.ServiceNameCourier,
-		Port:     3000,
-		IpAddr:   "127.0.0.1",
-		LogPath:  "./",
-		ConfPath: "/Users/zhangweili/Desktop/rbac/configs/courier.yaml",
+	svr, err := courier.New()
+	if err != nil {
+		log.ErrorLog(errors.NewError(err))
+		return
 	}
 
-	if err := svr.Run(); err != nil {
+	svr, err = server.LoadConfig(constant.ServiceNameCourier, []string{"."}, svr)
+	if err != nil {
 		log.ErrorLog(errors.NewError(err))
+		return
+	}
+
+	log.Infof("server conf:%+v", svr)
+
+	err = server.Run(svr)
+	if err != nil {
+		log.ErrorLog(errors.NewError(err))
+		return
 	}
 }

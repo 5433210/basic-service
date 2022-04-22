@@ -10,7 +10,7 @@ import (
 
 func Test_Group(t *testing.T) {
 	log.Init(log.OptLevel(log.DebugLevel))
-	s, _ := NewService(dbPath, regoPath, dataPath)
+	s, _ := New(dbPath, regoPath, dataPath)
 	defer s.Release()
 	t.Run("", func(t *testing.T) {
 		var err error

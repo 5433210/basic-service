@@ -1,49 +1,32 @@
 package courier
 
 import (
-	"strconv"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/rs/xid"
-
+	fiber "github.com/gofiber/fiber/v2"
 	servicev1 "wailik.com/internal/courier/service/v1"
-	"wailik.com/internal/pkg/constant"
 	"wailik.com/internal/pkg/microservice"
+	"wailik.com/internal/pkg/server"
 )
 
-type Server struct {
-	Name     string
-	Port     uint16
-	IpAddr   string
-	ConfPath string
-	LogPath  string
+type CourierServer struct {
+	server.Server
+	service servicev1.Service
 }
 
-func (svr Server) Run() error {
-	app := fiber.New()
-	srvc, err := servicev1.New()
+func New() (*CourierServer, error) {
+	service, err := servicev1.New()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-
-	route(app, srvc)
-	addr := svr.IpAddr + ":" + strconv.Itoa(int(svr.Port))
-
-	node := microservice.ServiceNode{
-		Addr:     "http://" + addr,
-		Name:     svr.Name,
-		UniqueId: constant.DiscoveryPrifex + "/" + constant.ServiceNameCourier + "/" + xid.New().String(),
-		PickMode: microservice.SrvcPickModeRandom,
-		RunMode:  microservice.SrvcRunModeFair,
+	var s = &CourierServer{
+		service: service,
 	}
-	msrvc, err := microservice.New(node, svr.ConfPath, nil, nil)
-	if err != nil {
-		return err
-	}
+	return s, nil
+}
 
-	srvc.SetMicroService(msrvc)
+func (s *CourierServer) SetMicroService(ms microservice.MicroService) {
+	s.service.SetMicroService(ms)
+}
 
-	msrvc.Start()
-
-	return app.Listen(addr)
+func (s *CourierServer) Bind(app *fiber.App) {
+	route(app, s.service)
 }

@@ -1,64 +1,32 @@
 package sched
 
 import (
-	"strconv"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/rs/xid"
-
-	"wailik.com/internal/pkg/constant"
-	"wailik.com/internal/pkg/log"
+	fiber "github.com/gofiber/fiber/v2"
 	"wailik.com/internal/pkg/microservice"
+	"wailik.com/internal/pkg/server"
 	servicev1 "wailik.com/internal/sched/service/v1"
 )
 
-type Server struct {
-	Port          uint16
-	IpAddr        string
-	LogPath       string
-	Name          string
-	ConfPath      string
+type SchedServer struct {
+	server.Server
+	service       servicev1.Service
 	StoreEndpoint []string
 	StorePoolSize int
 }
 
-func (svr Server) Run() error {
-	log.Debug("server running...")
-	app := fiber.New(fiber.Config{})
-	srvc, err := servicev1.New(svr.StoreEndpoint, svr.StorePoolSize)
+func CreateService(s *SchedServer) (*SchedServer, error) {
+	service, err := servicev1.New(s.StoreEndpoint, s.StorePoolSize)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+	s.service = service
+	return s, nil
+}
 
-	route(app, srvc)
-	addr := svr.IpAddr + ":" + strconv.Itoa(int(svr.Port))
-	node := microservice.ServiceNode{
-		Addr:     "http://" + addr,
-		Name:     svr.Name,
-		UniqueId: constant.DiscoveryPrifex + "/" + constant.ServiceNameSched + "/" + xid.New().String(),
-		PickMode: microservice.SrvcPickModeMaster,
-		RunMode:  microservice.SrvcRunModeMasterSlave,
-	}
-	log.Debugf("%v", node)
-	msrvc, err := microservice.New(node, svr.ConfPath,
-		func() error {
-			log.Info("service node registered")
+func (s *SchedServer) SetMicroService(ms microservice.MicroService) {
+	s.service.SetMicroService(ms)
+}
 
-			return nil
-		},
-		func() error {
-			log.Info("service node had been master")
-
-			return srvc.LoadSchedules()
-		},
-	)
-	if err != nil {
-		return err
-	}
-	srvc.SetMicroService(msrvc)
-	srvc.Run()
-
-	log.Info("listen--------")
-
-	return app.Listen(addr)
+func (s *SchedServer) Bind(app *fiber.App) {
+	route(app, s.service)
 }

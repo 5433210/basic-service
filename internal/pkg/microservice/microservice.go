@@ -31,6 +31,10 @@ type (
 	BeenMaster func() error
 )
 
+type MicroServiceConfig struct {
+	Endpoints []string
+}
+
 type ClientConfig clientv3.Config
 
 type microService struct {
@@ -43,7 +47,6 @@ type microService struct {
 type MicroService interface {
 	Start()
 	Stop()
-	// Pull() error
 	Pick(name string, value string) *ServiceNode
 }
 
@@ -64,21 +67,21 @@ func (s *MicroServiceObject) GetMicroService() MicroService {
 	return s.microService
 }
 
-func New(node ServiceNode, clientConfigPath string, registered Registered, beenMaster BeenMaster) (*microService, error) {
+func New(node ServiceNode, conf MicroServiceConfig, registered Registered, beenMaster BeenMaster) (*microService, error) {
 	log.Info("new micro service...")
-	conf, err := LoadClientConfig(clientConfigPath)
-	if err != nil {
-		return nil, err
+
+	var clientConf = ClientConfig{
+		Endpoints: conf.Endpoints,
 	}
 
 	manager := NewNodeManager()
 
-	discovery, err := NewDiscovery(*conf, manager)
+	discovery, err := NewDiscovery(clientConf, manager)
 	if err != nil {
 		return nil, err
 	}
 
-	register, err := NewRegister(&node, *conf, registered, beenMaster)
+	register, err := NewRegister(&node, clientConf, registered, beenMaster)
 	if err != nil {
 		return nil, err
 	}
@@ -108,10 +111,6 @@ func (ms *microService) Stop() {
 		ms.running = false
 	}
 }
-
-// func (ms *microService) Pull() error {
-// 	return ms.discovery.pull()
-// }
 
 func (ms *microService) Pick(name string, value string) *ServiceNode {
 	return ms.manager.Pick(name, value)
