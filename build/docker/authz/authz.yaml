@@ -1,13 +1,13 @@
 Server:
   Name: authz
   Port: 3002
-  IpAddr: 127.0.0.1
+  IpAddr: 192.168.10.3
   MicroServiceConfig:
     Disabled: true
     Endpoints:
-      - "http://127.0.0.1:2379"
-      - "http://127.0.0.1:22379"
-      - "http://127.0.0.1:32379"
+      - "http://gateway:2379"
+      - "http://gateway:22379"
+      - "http://gateway:32379"
 RegoPath: "./authz.rego"
 DataPath: "./authz.data.json"
 DBPath: "./db"

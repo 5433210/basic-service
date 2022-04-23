@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
-cp -rv authn.yaml "$DST_DIR"
+cd $(dirname "$0")
+cp authn.yaml "$DST_DIR"
+cd -
 
 

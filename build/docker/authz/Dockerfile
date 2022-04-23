@@ -8,6 +8,7 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
 COPY authz /opt/authz/
 COPY authz.yaml /opt/authz/
 COPY authz.rego /opt/authz/
+COPY authz.data.json /opt/authz/
 
 EXPOSE 3002
 

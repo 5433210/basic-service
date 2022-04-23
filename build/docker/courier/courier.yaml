@@ -1,10 +1,10 @@
 Server:
   Name: courier
   Port: 3004
-  IpAddr: 127.0.0.1
+  IpAddr: 192.168.10.5
   MicroServiceConfig:
     Disabled: true
     Endpoints:
-      - "http://127.0.0.1:2379"
-      - "http://127.0.0.1:22379"
-      - "http://127.0.0.1:32379"
+      - "http://gateway:2379"
+      - "http://gateway:22379"
+      - "http://gateway:32379"

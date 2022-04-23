@@ -1,11 +1,11 @@
 Server:
   Name: authn
   Port: 3001
-  IpAddr: 127.0.0.1
+  IpAddr: 192.168.10.2
   MicroServiceConfig:
     Disabled: true
     Endpoints:
-      - "http://127.0.0.1:2379"
-      - "http://127.0.0.1:22379"
-      - "http://127.0.0.1:32379"
-DataSource: "root:root@tcp(127.0.0.1:3306)/authn?parseTime=true"
+      - "http://gateway:2379"
+      - "http://gateway:22379"
+      - "http://gateway:32379"
+DataSource: "root:root@tcp(gateway:3306)/authn?parseTime=true"
