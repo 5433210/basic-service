@@ -1,7 +1,7 @@
 package constant
 
 const (
-	RegoFilename = "rbac.rego"
+	RegoFilename = "authz.rego"
 
 	FldSlash = "/"
 
@@ -66,8 +66,8 @@ const (
 	ColCredsIdtfs  = "Credentials.Identifiers"
 	ColIdentifiers = "Identifiers"
 
-	IdentifierTypeEmail  = "email"
-	IdentifierTypeMobile = "mobile"
+	IdentifierTypeEmail  = "E"
+	IdentifierTypeMobile = "M"
 
 	FldStatus = "status"
 

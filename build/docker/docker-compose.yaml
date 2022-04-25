@@ -1,0 +1,58 @@
+version: '3'
+networks:
+  basic-service:  
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.10.0/24
+services:
+  authn:       
+    image: 192.168.1.200:80/basic-service/authn-amd64:0.0.1
+    container_name: authn
+    networks:
+      basic-service:
+        ipv4_address: 192.168.10.2  
+    ports:
+      - "192.168.1.1:3001:3001"
+    extra_hosts:
+      - "srvcreg:192.168.1.1"
+  authz:       
+    image: 192.168.1.200:80/basic-service/authz-amd64:0.0.1
+    container_name: authz
+    networks:
+      basic-service:
+        ipv4_address: 192.168.10.3
+    ports:
+      - "192.168.1.1:3002:3002"
+    extra_hosts:
+      - "srvcreg:192.168.1.1"
+  captcha:       
+    image: 192.168.1.200:80/basic-service/captcha-amd64:0.0.1
+    container_name: captcha
+    networks:
+      basic-service:
+        ipv4_address: 192.168.10.4
+    ports:
+      - "192.168.1.1:3003:3003"
+    extra_hosts:
+      - "srvcreg:192.168.1.1"
+  courier:       
+    image: 192.168.1.200:80/basic-service/courier-amd64:0.0.1
+    container_name: courier
+    networks:
+      basic-service:
+        ipv4_address: 192.168.10.5
+    ports:
+      - "192.168.1.1:3004:3004"
+    extra_hosts:
+      - "srvcreg:192.168.1.1"
+  sched:       
+    image: 192.168.1.200:80/basic-service/sched-amd64:0.0.1
+    container_name: sched
+    networks:
+      basic-service:
+        ipv4_address: 192.168.10.6
+    ports:
+      - "192.168.1.1:3005:3005"
+    extra_hosts:
+      - "srvcreg:192.168.1.1"

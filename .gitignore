@@ -5,7 +5,7 @@ target
 etcd
 configs
 shared
-sql
+sql.old
 
 ### Backup ###
 *.bak
