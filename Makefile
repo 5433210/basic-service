@@ -10,7 +10,8 @@ Options:
   PLATFORMS			The multiple platforms to build. Default is the host platform.
 					ONLY support os darwin/linux/windows, arch 386/amd64/arm/arm64.
         			Example: make PLATFORMS="linux_amd64 linux_arm64"
-  IMG_ARCHS		 	The image architectures. ONLY support arch 386/amd64/arm/arm64.
+  IMG_ARCHS		 	The image architectures. Default is amd64.
+  					ONLY support arch 386/amd64/arm/arm64.
 					Example: make IMG_ARCHS ="amd64 arm64"
   VERSION      		The version information compiled into binaries.
         			The default is obtained from gsemver or git.

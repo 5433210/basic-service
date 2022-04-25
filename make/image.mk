@@ -1,4 +1,5 @@
 DOCKER 			:= docker
+DOCKER_COMPOSE	:= docker-compose
 REGISTRY_PREFIX ?= 192.168.1.200:80
 PROJECT_PREFIX	:= basic-service
 BASE_IMAGE 		:= alpine:3.15
@@ -11,10 +12,13 @@ ifeq ($(shell ps -ef | grep "docker" | grep "server" > /dev/null; echo $?), 1)
 	ERR :=$(error docker is not running)
 endif
 
+ifeq ($(IMG_ARCHS),)
+	IMG_ARCHS := amd64
+endif
 # Determine image files by looking into build/docker/*/Dockerfile
 IMAGES_DIR ?= $(wildcard ${ROOT_DIR}/build/docker/*)
 # Determine images names by stripping out the dir names
-IMAGES ?= $(foreach image,${IMAGES_DIR},$(notdir ${image}))
+IMAGES ?= $(filter-out %.sh %.yaml,$(foreach image,${IMAGES_DIR},$(notdir ${image})))
 
 ifeq (${IMAGES},)
   ERR := $(error Could not determine IMAGES, set ROOT_DIR or run in source dir)
@@ -79,3 +83,25 @@ image.clean.%:
 	$(eval ARCH := $(word 2,$(subst _, ,$(PLATFORM))))
 	@echo "===========> cleaning image $(IMAGE) $(VERSION) to $(REGISTRY_PREFIX)"
 	$(DOCKER) rmi $(REGISTRY_PREFIX)/$(PROJECT_PREFIX)/$(IMAGE)-$(ARCH):$(VERSION)	
+
+.PHONY: image.up
+image.up:
+	@export REGSRV=192.168.1.1
+	@export DBSRV=192.168.1.1	
+	@export IMGREG=$(REGISTRY_PREFIX)
+	@export IMGPROJ=$(PROJECT_PREFIX)
+	@export IMGARCH=$(ARCH)
+	@export IMGVER=$(VERSION)
+	@export CNTRHOST=192.168.1.1
+	@export CNTRSUBNET=192.168.20.0/24	
+	@export CNTRIPV4_AUTHN=192.168.20.2	
+	@export CNTRIPV4_AUTHZ=192.168.20.3
+	@export CNTRIPV4_CAPTCHA=192.168.20.4		
+	@export CNTRIPV4_COURIER=192.168.20.5	
+	@export CNTRIPV4_SCHED=192.168.20.6	
+
+	cd $(ROOT_DIR)/build/docker/ &&	 $(DOCKER_COMPOSE) up -d &&	cd -
+
+.PHONY: image.down
+image.down:
+	cd $(ROOT_DIR)/build/docker/ &&	$(DOCKER_COMPOSE) down && cd -

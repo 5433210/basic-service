@@ -1,13 +1,13 @@
 Server:
   Name: sched
   Port: 3005
-  IpAddr: 192.168.10.6
+  IpAddr: mine
   MicroServiceConfig:
     Disabled: true
     Endpoints:
-      - "http://gateway:2379"
-      - "http://gateway:22379"
-      - "http://gateway:32379"
+      - "http://regsrv:2379"
+      - "http://regsrv:22379"
+      - "http://regsrv:32379"
 StoreEndpoint:
-  - "http://gateway:2379"
+  - "http://regsrv:2379"
 StorePoolSize: 1

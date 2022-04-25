@@ -4,55 +4,61 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 192.168.10.0/24
+        - subnet: ${CNTRSUBNET}
 services:
   authn:       
-    image: 192.168.1.200:80/basic-service/authn-amd64:0.0.1
+    image: "${IMGREG}/${IMGPROJ}/authn-${IMGARCH}:${IMGVER}"
     container_name: authn
     networks:
       basic-service:
-        ipv4_address: 192.168.10.2  
+        ipv4_address: ${CNTRIPV4_AUTHN}  
     ports:
-      - "192.168.1.1:3001:3001"
+      - "${CNTRHOST}:3001:3001"
     extra_hosts:
-      - "srvcreg:192.168.1.1"
+      - "mine:${CNTRIPV4_AUTHN}"
+      - "dbsrv:${DBSRV}"
+      - "regsrv:${REGSRV}"
   authz:       
-    image: 192.168.1.200:80/basic-service/authz-amd64:0.0.1
+    image: ${IMGREG}/${IMGPROJ}/authz-${IMGARCH}:${IMGVER}
     container_name: authz
     networks:
       basic-service:
-        ipv4_address: 192.168.10.3
+        ipv4_address: ${CNTRIPV4_AUTHZ}
     ports:
-      - "192.168.1.1:3002:3002"
+      - "${CNTRHOST}:3002:3002"
     extra_hosts:
-      - "srvcreg:192.168.1.1"
+      - "mine:${CNTRIPV4_AUTHZ}"
+      - "regsrv:${REGSRV}"
   captcha:       
-    image: 192.168.1.200:80/basic-service/captcha-amd64:0.0.1
+    image: ${IMGREG}/${IMGPROJ}/captcha-${IMGARCH}:${IMGVER}
     container_name: captcha
     networks:
       basic-service:
-        ipv4_address: 192.168.10.4
+        ipv4_address: ${CNTRIPV4_CAPTCHA}
     ports:
-      - "192.168.1.1:3003:3003"
+      - "${CNTRHOST}:3003:3003"
     extra_hosts:
-      - "srvcreg:192.168.1.1"
+      - "mine:${CNTRIPV4_CAPTCHA}"
+      - "regsrv:${REGSRV}"
   courier:       
-    image: 192.168.1.200:80/basic-service/courier-amd64:0.0.1
+    image: ${IMGREG}/${IMGPROJ}/courier-${IMGARCH}:${IMGVER}
     container_name: courier
     networks:
       basic-service:
-        ipv4_address: 192.168.10.5
+        ipv4_address: ${CNTRIPV4_COURIER}
     ports:
-      - "192.168.1.1:3004:3004"
+      - "${CNTRHOST}:3004:3004"
     extra_hosts:
-      - "srvcreg:192.168.1.1"
+      - "mine:${CNTRIPV4_COURIER}"
+      - "regsrv:${REGSRV}"
   sched:       
-    image: 192.168.1.200:80/basic-service/sched-amd64:0.0.1
+    image: ${IMGREG}/${IMGPROJ}/sched-${IMGARCH}:${IMGVER}
     container_name: sched
     networks:
       basic-service:
-        ipv4_address: 192.168.10.6
+        ipv4_address: ${CNTRIPV4_SCHED}
     ports:
-      - "192.168.1.1:3005:3005"
+      - "${CNTRHOST}:3005:3005"
     extra_hosts:
-      - "srvcreg:192.168.1.1"
+      - "mine:${CNTRIPV4_SCHED}"
+      - "regsrv:${REGSRV}"
