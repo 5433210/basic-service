@@ -1,9 +1,9 @@
 ROOT_MODULE=wailik.com
 
-include make/common.mk
-include make/go-depend.mk
-include make/go-build.mk
-include make/image.mk
+include scripts/make/common.mk
+include scripts/make/go-depend.mk
+include scripts/make/go-build.mk
+include scripts/make/image.mk
 
 define USAGE_OPTIONS
 Options:
