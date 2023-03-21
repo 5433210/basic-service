@@ -15,9 +15,8 @@ endif
 ifeq ($(IMG_ARCHS),)
 	IMG_ARCHS := amd64
 endif
-# Determine image files by looking into build/package/*/Dockerfile
+
 IMAGES_DIR ?= $(wildcard ${ROOT_DIR}/build/package/*)
-# Determine images names by stripping out the dir names
 IMAGES ?= $(filter-out %.sh %.yaml,$(foreach image,${IMAGES_DIR},$(notdir ${image})))
 
 ifeq (${IMAGES},)

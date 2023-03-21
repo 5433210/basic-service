@@ -3,7 +3,7 @@ package store
 import (
 	"context"
 
-	"github.com/tikv/client-go/v2/tikv"
+	redis "github.com/redis/go-redis/v9"
 
 	"wailik.com/internal/pkg/util"
 )
@@ -13,8 +13,7 @@ type Store struct {
 }
 
 type Client struct {
-	client *tikv.KVStore
-	txn    *Transaction
+	client *redis.Client
 }
 
 type clientPool struct {
@@ -23,27 +22,31 @@ type clientPool struct {
 }
 
 type Transaction struct {
-	txn *tikv.KVTxn
+	txn *redis.Client
+}
+
+func newTransaction(client *redis.Client) *Transaction {
+	return &Transaction{client}
 }
 
 func (t *Transaction) Commit(ctx context.Context) error {
-	return t.txn.Commit(ctx)
+	return nil
 }
 
 func (t *Transaction) Rollback() error {
-	return t.txn.Rollback()
+	return nil
 }
 
 func (t *Transaction) Get(ctx context.Context, k []byte) ([]byte, error) {
-	return t.txn.Get(ctx, k)
+	return t.txn.Get(ctx, string(k)).Bytes()
 }
 
-func (t *Transaction) Delete(k []byte) error {
-	return t.txn.Delete(k)
+func (t *Transaction) Delete(ctx context.Context, k []byte) error {
+	return t.txn.Del(ctx, string(k)).Err()
 }
 
-func (t *Transaction) Put(k []byte, v []byte) error {
-	return t.txn.Set(k, v)
+func (t *Transaction) Put(ctx context.Context, k []byte, v []byte) error {
+	return t.txn.Set(ctx, string(k), string(v), 0).Err()
 }
 
 func newPool(endpoint []string, size int) (pool *clientPool, err error) {
@@ -62,13 +65,11 @@ func newPool(endpoint []string, size int) (pool *clientPool, err error) {
 }
 
 func (p *clientPool) newClient(endpoint []string) (*Client, error) {
-	client, err := tikv.NewTxnClient(endpoint)
-	if err != nil {
-		return nil, err
-	}
-
 	return &Client{
-		client: client,
+		client: redis.NewClient(&redis.Options{
+			Addr:     endpoint[0],
+			Password: "",
+			DB:       0}),
 	}, nil
 }
 
@@ -88,13 +89,6 @@ func (r *Store) Obtain() *Client {
 }
 
 func (c *Client) Txn(isPessimistic bool) (*Transaction, error) {
-	c.txn = &Transaction{}
-	txn, err := c.client.Begin()
-	if err != nil {
-		return nil, err
-	}
-	txn.SetPessimistic(isPessimistic)
-	c.txn.txn = txn
-
-	return c.txn, nil
+	txn := newTransaction(c.client)
+	return txn, nil
 }

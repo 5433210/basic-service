@@ -21,7 +21,7 @@ export USAGE_OPTIONS
 
 .DEFAULT_GOAL := all
 .PHONY: all
-all: dependencies build image
+all: dependencies build 
 
 .PHONY: build
 build:

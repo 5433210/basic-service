@@ -34,6 +34,7 @@ func NewCronJob(scheduler *Scheduler, jobId string, onetime bool, executor execu
 }
 
 func (c *CronJob) Run() {
+	log.Debugf("job %+v running...", c)
 	startAt := new(string)
 	finishAt := new(string)
 	id := uuid.NewString()
@@ -129,6 +130,7 @@ func (c *Scheduler) Load() error {
 }
 
 func (c *Scheduler) Start() {
+	log.Debug("scheduler starting...")
 	c.cron.Start()
 }
 
@@ -156,12 +158,12 @@ func (c *Scheduler) Add(job apiv1.Job) error {
 	if executorInstance == nil {
 		return nil
 	}
-
-	id, err = c.cron.AddJob(schedule, NewCronJob(c, job.Id, job.Onetime, executorInstance, executor.Config, job.Data))
+	cronjob := NewCronJob(c, job.Id, job.Onetime, executorInstance, executor.Config, job.Data)
+	id, err = c.cron.AddJob(schedule, cronjob)
 	if err != nil {
 		return err
 	}
-
+	log.Debugf("job %+v added...", cronjob)
 	c.ids[job.Id] = id
 
 	return nil

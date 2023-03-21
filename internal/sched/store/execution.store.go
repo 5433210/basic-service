@@ -20,7 +20,7 @@ func (e *ExecutionStore) Create(txn *Transaction, execution apiv1.Execution) err
 	if err != nil {
 		return err
 	}
-	if err = txn.Put([]byte("execution:"+execution.JobId+":"+execution.Id), bytes); err != nil {
+	if err = txn.Put(context.Background(), []byte("execution:"+execution.JobId+":"+execution.Id), bytes); err != nil {
 		return err
 	}
 
@@ -28,7 +28,7 @@ func (e *ExecutionStore) Create(txn *Transaction, execution apiv1.Execution) err
 }
 
 func (e *ExecutionStore) Retrieve(txn *Transaction, jobId string, id string) (*apiv1.Execution, error) {
-	bytes, err := txn.Get(context.TODO(), []byte("execution:"+jobId+":"+id))
+	bytes, err := txn.Get(context.Background(), []byte("execution:"+jobId+":"+id))
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (e *ExecutionStore) Update(txn *Transaction, execution apiv1.Execution) err
 	if err != nil {
 		return err
 	}
-	if err = txn.Put([]byte("execution:"+execution.JobId+":"+execution.Id), bytes); err != nil {
+	if err = txn.Put(context.Background(), []byte("execution:"+execution.JobId+":"+execution.Id), bytes); err != nil {
 		return err
 	}
 
@@ -54,5 +54,5 @@ func (e *ExecutionStore) Update(txn *Transaction, execution apiv1.Execution) err
 }
 
 func (e *ExecutionStore) Delete(txn *Transaction, jobId string, id string) error {
-	return txn.Delete([]byte("execution:" + jobId + ":" + id))
+	return txn.Delete(context.Background(), []byte("execution:"+jobId+":"+id))
 }

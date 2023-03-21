@@ -9,9 +9,6 @@ import (
 type Service interface {
 	Sched() *schedSrvc
 	microservice.MicroServiceHelper
-	Run()
-	Stop()
-	LoadSchedules() error
 }
 
 type service struct {
@@ -31,26 +28,16 @@ func New(endpoint []string, size int) (Service, error) {
 	if err != nil {
 		return nil, err
 	}
+	var scheduler = NewScheduler(store)
+	scheduler.Start()
+	scheduler.Load()
 
 	var servie Service = &service{
 		store:     store,
-		scheduler: NewScheduler(store),
+		scheduler: scheduler,
 	}
 
 	log.Info("service created")
 
 	return servie, nil
-}
-
-func (s *service) Run() {
-	s.GetMicroService().Start()
-	s.scheduler.Start()
-}
-
-func (s *service) Stop() {
-	s.scheduler.Stop()
-}
-
-func (s *service) LoadSchedules() error {
-	return s.scheduler.Load()
 }

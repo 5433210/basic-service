@@ -1,9 +1,9 @@
 package store
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"wailik.com/internal/pkg/log"
 	apiv1 "wailik.com/internal/sched/api/v1"
@@ -22,7 +22,7 @@ func (j *JobStore) Create(txn *Transaction, job apiv1.Job) error {
 	if err != nil {
 		return err
 	}
-	if err = txn.Put([]byte("job:"+job.Id), bytes); err != nil {
+	if err = txn.Put(context.Background(), []byte("job:"+job.Id), bytes); err != nil {
 		return err
 	}
 
@@ -30,7 +30,7 @@ func (j *JobStore) Create(txn *Transaction, job apiv1.Job) error {
 }
 
 func (j *JobStore) Retrieve(txn *Transaction, jobId string) (*apiv1.Job, error) {
-	bytes, err := txn.Get(context.TODO(), []byte("job:"+jobId))
+	bytes, err := txn.Get(context.Background(), []byte("job:"+jobId))
 	if err != nil {
 		return nil, err
 	}
@@ -49,64 +49,79 @@ func (j *JobStore) Update(txn *Transaction, job apiv1.Job) error {
 		return err
 	}
 
-	return txn.Put([]byte("job:"+job.Id), bytes)
+	return txn.Put(context.Background(), []byte("job:"+job.Id), bytes)
 }
 
 func (j *JobStore) Delete(txn *Transaction, jobId string) error {
-	return txn.Delete([]byte("job:" + jobId))
+	return txn.Delete(context.Background(), []byte("job:"+jobId))
 }
 
 func (j *JobStore) RetrieveAll(txn *Transaction) (*[]apiv1.Job, error) {
-	startKey := []byte("job:")
+	ctx := context.Background()
 	jobs := make([]apiv1.Job, 0)
-	it, err := txn.txn.Iter(startKey, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer it.Close()
+	var cursor uint64
+	for {
+		var keys []string
+		var err error
+		keys, cursor, err = txn.txn.Scan(ctx, cursor, "job:*", 0).Result()
+		if err != nil {
+			return nil, err
+		}
 
-	for it.Valid() {
-		if !bytes.HasPrefix(it.Key(), startKey) {
+		for _, key := range keys {
+			fmt.Println("key", key)
+			val := txn.txn.Get(ctx, key).Val()
+			if val == "" {
+				break
+			}
+
+			job := &apiv1.Job{}
+			if err := json.Unmarshal([]byte(val), job); err != nil {
+				return nil, err
+			}
+			jobs = append(jobs, *job)
+		}
+
+		if cursor == 0 { // no more keys
 			break
 		}
-
-		job := &apiv1.Job{}
-		if err = json.Unmarshal(it.Value(), job); err != nil {
-			log.Debugf("%+v", string(it.Value()))
-
-			return nil, err
-		}
-		jobs = append(jobs, *job)
-
-		if err = it.Next(); err != nil {
-			return nil, err
-		}
 	}
 
+	log.Debugf("scan finished")
 	return &jobs, nil
 }
 
 func (j *JobStore) RetrieveExecutions(txn *Transaction, jobId string) (*[]apiv1.Execution, error) {
-	startKey := []byte("execution:" + jobId + ":")
+	ctx := context.Background()
 	executions := make([]apiv1.Execution, 0)
-	it, err := txn.txn.Iter(startKey, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer it.Close()
-	for it.Valid() {
-		if !bytes.HasPrefix(it.Key(), startKey) {
+	var cursor uint64
+	for {
+		var keys []string
+		var err error
+		keys, cursor, err = txn.txn.Scan(ctx, cursor, "execution:"+jobId+":", 0).Result()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, key := range keys {
+			fmt.Println("key", key)
+			val := txn.txn.Get(ctx, key).Val()
+			if val == "" {
+				break
+			}
+
+			execution := &apiv1.Execution{}
+			if err := json.Unmarshal([]byte(val), execution); err != nil {
+				return nil, err
+			}
+			executions = append(executions, *execution)
+		}
+
+		if cursor == 0 { // no more keys
 			break
-		}
-		execution := &apiv1.Execution{}
-		if err = json.Unmarshal(it.Value(), execution); err != nil {
-			return nil, err
-		}
-		executions = append(executions, *execution)
-		if err = it.Next(); err != nil {
-			return nil, err
 		}
 	}
 
+	log.Debugf("scan finished")
 	return &executions, nil
 }
