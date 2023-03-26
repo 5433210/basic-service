@@ -1,3 +1,5 @@
+// This is the main function of the Sched service.
+// It loads the configuration, creates the service, and runs the server.
 package main
 
 import (

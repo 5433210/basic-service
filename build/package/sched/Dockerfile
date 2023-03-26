@@ -7,6 +7,7 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
 
 COPY sched /opt/sched/
 COPY sched.yaml /opt/sched/
+COPY mqtt_sender /opt/sched/
 
 EXPOSE 3005
 

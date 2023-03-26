@@ -46,7 +46,7 @@ go.build.%:
 	$(eval PLATFORM := $(word 1,$(subst ., ,$*)))
 	$(eval OS := $(word 1,$(subst _, ,$(PLATFORM))))
 	$(eval ARCH := $(word 2,$(subst _, ,$(PLATFORM))))
-	@echo "===========> Building binary $(COMMAND) $(VERSION) for $(OS) $(ARCH) $(GO_BUILD_FLAGS)"
+	@echo "===========> Building binary $* $(COMMAND) $(VERSION) for $(OS) $(ARCH) $(GO_BUILD_FLAGS)"
 	@mkdir -p $(OUTPUT_DIR)/platforms/$(OS)/$(ARCH)
 	@CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) $(GO) build $(GO_BUILD_FLAGS) -o $(OUTPUT_DIR)/platforms/$(OS)/$(ARCH)/$(COMMAND)$(GO_SUFFIX_EXE) $(GO_CMDS_DIR)/$(COMMAND)
 

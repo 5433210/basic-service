@@ -50,6 +50,7 @@ func read(ctx context.Context, wg *sync.WaitGroup, std io.ReadCloser, resultChan
 			} else {
 				err := scanner.Err()
 				if err != nil {
+					log.Debugf("scanner read error(%+v)", err)
 					resultChan <- result{success: false, output: err.Error()}
 
 					return
@@ -73,7 +74,7 @@ func executeCommand(cmd string) result {
 	if runtime.GOOS == "windows" {
 		c = exec.CommandContext(ctx, "cmd", "/C", cmd) // windows
 	} else {
-		c = exec.CommandContext(ctx, "bash", "-c", cmd) // mac linux
+		c = exec.CommandContext(ctx, "sh", "-c", cmd) // mac linux
 	}
 
 	stdout, err := c.StdoutPipe()
@@ -91,6 +92,7 @@ func executeCommand(cmd string) result {
 	defer func() {
 		close(stderrChan)
 		close(stdoutChan)
+		log.Debugf("stdout stderr close")
 	}()
 
 	var wg sync.WaitGroup
@@ -99,6 +101,7 @@ func executeCommand(cmd string) result {
 	go read(ctx, &wg, stderr, stderrChan)
 	go read(ctx, &wg, stdout, stdoutChan)
 	if err = c.Start(); err != nil {
+		log.Debugf("start command error(%+v)", err)
 		return result{success: false, output: err.Error()}
 	}
 	wg.Wait()

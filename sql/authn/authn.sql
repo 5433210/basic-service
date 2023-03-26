@@ -19,6 +19,10 @@ SET
 SET
     FOREIGN_KEY_CHECKS = 0;
 
+CREATE DATABASE authn;
+
+USE authn;
+
 -- ----------------------------
 -- Table structure for tb_credential
 -- ----------------------------

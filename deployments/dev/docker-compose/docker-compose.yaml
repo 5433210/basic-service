@@ -1,64 +1,140 @@
-version: '3'
+version: '3.8'
+services:
+  etcd:
+    image: quay.io/coreos/etcd:latest
+    container_name: etcd
+    environment:
+      ALLOW_NONE_AUTHENTICATION: "yes"
+    ports:
+      - "2379:2379"
+      - "2380:2380" 
+    networks:
+      basic_service:
+        ipv4_address: 192.168.0.2
+    restart: always
+  mqtt:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      basic_service:
+        ipv4_address: 192.168.0.3
+    restart: always
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"    
+    ports:
+      - "3306:3306"
+    volumes:
+      - ../../../sql/authn/authn.sql:/docker-entrypoint-initdb.d/authn.sql
+    networks:
+      basic_service:
+        ipv4_address: 192.168.0.4
+    restart: always
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      basic_service:
+        ipv4_address: 192.168.0.5  
+    restart: always
+  authn:
+    image: 5433210/authn:latest
+    container_name: authn
+    ports:
+      - "3001:3001"
+    networks:
+      basic_service:
+        ipv4_address: 192.168.0.11
+    extra_hosts:
+      - "mine:192.168.0.11"
+      - "etcd:192.168.0.2"
+      - "mqtt:192.168.0.3"
+      - "mysql:192.168.0.4"
+      - "redis:192.168.0.5"
+    depends_on:
+      - mysql
+      - etcd
+    restart: always
+  authz:
+    image: 5433210/authz:latest
+    container_name: authz
+    ports:
+      - "3002:3002"
+    networks:
+      basic_service:
+        ipv4_address: 192.168.0.12
+    extra_hosts:
+      - "mine:192.168.0.12"
+      - "etcd:192.168.0.2"
+      - "mqtt:192.168.0.3"
+      - "mysql:192.168.0.4"
+      - "redis:192.168.0.5"
+    depends_on:
+      - etcd
+    restart: always
+  courier:
+    image: 5433210/courier:latest
+    container_name: courier
+    ports:
+      - "3003:3003"
+    networks:
+      basic_service:
+        ipv4_address: 192.168.0.13
+    extra_hosts:
+      - "mine:192.168.0.13"
+      - "etcd:192.168.0.2"
+      - "mqtt:192.168.0.3"
+      - "mysql:192.168.0.4"
+      - "redis:192.168.0.5"
+    restart: always
+  captcha:
+    image: 5433210/captcha:latest
+    container_name: captcha
+    ports:
+      - "3004:3004"
+    networks:
+      basic_service:
+        ipv4_address: 192.168.0.14
+    extra_hosts:
+      - "mine:192.168.0.14"
+      - "etcd:192.168.0.2"
+      - "mqtt:192.168.0.3"
+      - "mysql:192.168.0.4"
+      - "redis:192.168.0.5"
+    depends_on: 
+      - etcd
+    restart: always
+  sched:
+    image: 5433210/sched:latest
+    container_name: sched
+    ports:
+      - "3005:3005"
+    networks:
+      basic_service:
+        ipv4_address: 192.168.0.15
+    extra_hosts:
+      - "mine:192.168.0.15"
+      - "etcd:192.168.0.2"
+      - "mqtt:192.168.0.3"
+      - "mysql:192.168.0.4"
+      - "redis:192.168.0.5"
+    depends_on:
+      - etcd
+      - redis
+      - mqtt
+    restart: always
 networks:
-  basic-service:  
+  basic_service:
+    name: basic_service
     ipam:
       driver: default
       config:
-        - subnet: ${CNTRSUBNET}
-services:
-  authn:       
-    image: "${IMGREG}/${IMGPROJ}/authn-${IMGARCH}:${IMGVER}"
-    container_name: authn
-    networks:
-      basic-service:
-        ipv4_address: ${CNTRIPV4_AUTHN}  
-    ports:
-      - "${CNTRHOST}:3001:3001"
-    extra_hosts:
-      - "mine:${CNTRIPV4_AUTHN}"
-      - "dbsrv:${DBSRV}"
-      - "regsrv:${REGSRV}"
-  authz:       
-    image: ${IMGREG}/${IMGPROJ}/authz-${IMGARCH}:${IMGVER}
-    container_name: authz
-    networks:
-      basic-service:
-        ipv4_address: ${CNTRIPV4_AUTHZ}
-    ports:
-      - "${CNTRHOST}:3002:3002"
-    extra_hosts:
-      - "mine:${CNTRIPV4_AUTHZ}"
-      - "regsrv:${REGSRV}"
-  captcha:       
-    image: ${IMGREG}/${IMGPROJ}/captcha-${IMGARCH}:${IMGVER}
-    container_name: captcha
-    networks:
-      basic-service:
-        ipv4_address: ${CNTRIPV4_CAPTCHA}
-    ports:
-      - "${CNTRHOST}:3003:3003"
-    extra_hosts:
-      - "mine:${CNTRIPV4_CAPTCHA}"
-      - "regsrv:${REGSRV}"
-  courier:       
-    image: ${IMGREG}/${IMGPROJ}/courier-${IMGARCH}:${IMGVER}
-    container_name: courier
-    networks:
-      basic-service:
-        ipv4_address: ${CNTRIPV4_COURIER}
-    ports:
-      - "${CNTRHOST}:3004:3004"
-    extra_hosts:
-      - "mine:${CNTRIPV4_COURIER}"
-      - "regsrv:${REGSRV}"
-  sched:       
-    image: ${IMGREG}/${IMGPROJ}/sched-${IMGARCH}:${IMGVER}
-    container_name: sched
-    networks:
-      basic-service:
-        ipv4_address: ${CNTRIPV4_SCHED}
-    ports:
-      - "${CNTRHOST}:3005:3005"
-    extra_hosts:
-      - "mine:${CNTRIPV4_SCHED}"
-      - "regsrv:${REGSRV}"
+        - subnet: 192.168.0.0/24

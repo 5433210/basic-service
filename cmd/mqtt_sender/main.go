@@ -57,10 +57,13 @@ func main() {
 
 	ca, err := c.Connect(context.Background(), cp)
 	if err != nil {
+		stderr.Fatalf("Failed to connect1 to %s: %s", *server, err)
+
+		return
 	}
 	if ca.ReasonCode != 0 {
 		stderr.Fatalf("Failed to connect to %s : %d - %s",
-			*server, ca.ReasonCode, ca.Properties.ReasonString)
+			server, ca.ReasonCode, ca.Properties.ReasonString)
 
 		return
 	}

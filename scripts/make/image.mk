@@ -1,6 +1,6 @@
 DOCKER 			:= docker
 DOCKER_COMPOSE	:= docker-compose
-REGISTRY_PREFIX ?= 192.168.1.200:80
+REGISTRY_PREFIX ?= 5433210
 PROJECT_PREFIX	:= basic-service
 BASE_IMAGE 		:= alpine:3.15
 
@@ -38,8 +38,8 @@ image.build.%: go.build.%
 	cat $(ROOT_DIR)/build/package/$(IMAGE)/Dockerfile\
 		| sed "s#BASE_IMAGE#$(BASE_IMAGE)#g" >$(TEMP_DIR)/$(IMAGE)/Dockerfile
 	cp $(OUTPUT_DIR)/platforms/$(IMAGE_PLAT)/$(IMAGE) $(TEMP_DIR)/$(IMAGE)/
-	DST_DIR=$(TEMP_DIR)/$(IMAGE) CFG_DIR=$(ROOT_DIR)/configs/$(IMAGE) $(ROOT_DIR)/build/package/$(IMAGE)/build.sh 2>/dev/null || true
-	$(eval BUILD_SUFFIX := --pull -t $(REGISTRY_PREFIX)/$(PROJECT_PREFIX)/$(IMAGE)-$(ARCH):$(VERSION) $(TEMP_DIR)/$(IMAGE))
+	ROOT_DIR=$(ROOT_DIR) OUTPUT_DIR=$(OUTPUT_DIR) IMAGE_PLAT=$(IMAGE_PLAT) DST_DIR=$(TEMP_DIR)/$(IMAGE) CFG_DIR=$(ROOT_DIR)/configs/$(IMAGE) $(ROOT_DIR)/build/package/$(IMAGE)/build.sh 2>/dev/null || true
+	$(eval BUILD_SUFFIX := --pull -t $(REGISTRY_PREFIX)/$(IMAGE):$(VERSION) $(TEMP_DIR)/$(IMAGE))
 	@echo $(BUILD_SUFFIX)
 	$(DOCKER) build --platform $(IMAGE_PLAT) $(BUILD_SUFFIX)
 	@rm -rf $(TEMP_DIR)/$(IMAGE)
@@ -48,14 +48,14 @@ image.build.%: go.build.%
 image.push: $(foreach a,$(IMG_ARCHS),$(addprefix image.push., $(addprefix linux_$(a)., $(IMAGES))))
 
 .PHONY: image.push.%
-image.push.%: image.build.%
+image.push.%:
 	$(eval COMMAND := $(word 2,$(subst ., ,$*)))
 	$(eval PLATFORM := $(word 1,$(subst ., ,$*)))
 	$(eval IMAGE := $(COMMAND))
 	$(eval IMAGE_PLAT := $(subst _,/,$(PLATFORM)))
 	$(eval ARCH := $(word 2,$(subst _, ,$(PLATFORM))))
-	@echo "===========> Pushing image $(IMAGE) $(VERSION) to $(REGISTRY_PREFIX)"
-	$(DOCKER) push $(REGISTRY_PREFIX)/$(PROJECT_PREFIX)/$(IMAGE)-$(ARCH):$(VERSION)
+	@echo "===========>$* Pushing image $(IMAGE) $(VERSION) to $(REGISTRY_PREFIX)"
+	$(DOCKER) push $(REGISTRY_PREFIX)/$(IMAGE):$(VERSION)
 
 .PHONY: image.pull
 image.pull: $(foreach a,$(IMG_ARCHS),$(addprefix image.pull., $(addprefix linux_$(a)., $(IMAGES))))
@@ -67,8 +67,8 @@ image.pull.%:
 	$(eval IMAGE := $(COMMAND))
 	$(eval IMAGE_PLAT := $(subst _,/,$(PLATFORM)))
 	$(eval ARCH := $(word 2,$(subst _, ,$(PLATFORM))))
-	@echo "===========> pulling image $(IMAGE) $(VERSION) to $(REGISTRY_PREFIX)"
-	$(DOCKER) pull $(REGISTRY_PREFIX)/$(PROJECT_PREFIX)/$(IMAGE)-$(ARCH):$(VERSION)
+	@echo "===========> pulling image $(IMAGE) $(VERSION) from $(REGISTRY_PREFIX)"
+	$(DOCKER) pull $(REGISTRY_PREFIX)/$(IMAGE):$(VERSION)
 
 .PHONY: image.clean
 image.clean: $(foreach a,$(IMG_ARCHS),$(addprefix image.clean., $(addprefix linux_$(a)., $(IMAGES))))
@@ -85,19 +85,6 @@ image.clean.%:
 
 .PHONY: image.up
 image.up:
-	export REGSRV=192.168.1.1			&&\
-	export DBSRV=192.168.1.1			&&\
-	export IMGREG=$(REGISTRY_PREFIX)	&&\
-	export IMGPROJ=$(PROJECT_PREFIX)	&&\
-	export IMGARCH=$(IMG_ARCHS)			&&\
-	export IMGVER=$(VERSION)			&&\
-	export CNTRHOST=192.168.1.1 		&&\
-	export CNTRSUBNET="192.168.20.0/24"	&&\
-	export CNTRIPV4_AUTHN=192.168.20.2	&&\
-	export CNTRIPV4_AUTHZ=192.168.20.3	&&\
-	export CNTRIPV4_CAPTCHA=192.168.20.4	&&\
-	export CNTRIPV4_COURIER=192.168.20.5	&&\
-	export CNTRIPV4_SCHED=192.168.20.6		&&\
 	cd $(ROOT_DIR)/deployments/dev/docker-compose/ &&	 $(DOCKER_COMPOSE) up -d &&	cd -
 
 .PHONY: image.down

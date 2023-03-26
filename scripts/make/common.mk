@@ -7,7 +7,7 @@ TEMP_DIR		:=$(ROOT_DIR)/_temp
 TOOL_DIR 		:=$(OUTPUT_DIR)/tool
 
 SHELL 			:=$(shell which bash)
-VERSION			:=0.0.1
+VERSION			:=latest
 DATE			:=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 COVERAGE 		:=60
 ROOT_MODULE		:=wailik.com
