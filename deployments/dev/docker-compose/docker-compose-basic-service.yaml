@@ -36,7 +36,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ../../../sql/authn/authn.sql:/docker-entrypoint-initdb.d/authn.sql
+      - ./authn/authn.sql:/docker-entrypoint-initdb.d/authn.sql
     networks:
       basic_service:
         ipv4_address: 192.168.0.4
